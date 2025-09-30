@@ -99,6 +99,17 @@ with torch.no_grad():
 x_values = df["x"].values
 mask = x_values <= 2 * np.pi
 
+# --- 推論結果をCSVファイルに保存 ---
+results_df = pd.DataFrame({"x": x_values, "true_y": targets, "predicted_y": preds})
+
+# NaNを除外（学習に使用できなかった部分を除外）
+results_df = results_df.dropna()
+
+# CSVファイルとして保存
+output_csv_path = "data/prediction_results.csv"
+results_df.to_csv(output_csv_path, index=False)
+print(f"推論結果を {output_csv_path} に保存しました")
+
 # --- 可視化 ---
 plt.figure(figsize=(10, 5))
 plt.plot(x_values[mask], targets[mask], label="True (sin)")
@@ -109,4 +120,5 @@ plt.xlabel("x")
 plt.ylabel("sin(x)")
 plt.legend()
 plt.title(f"RNN Prediction vs True (look_back={look_back}, horizon={horizon})")
-plt.show()
+plt.savefig("data/prediction_results.png")
+# plt.show()
