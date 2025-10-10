@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 import torch
 import torch.nn as nn
-from torch.utils.data import Dataset, DataLoader
+from torch.utils.data import DataLoader, Dataset
 
 # sinカーブのデータを作成
 x = np.linspace(0, 100, 1000)
@@ -21,7 +21,9 @@ data = df["y"].values.astype("float32")
 
 # --- Dataset定義 ---
 class SinDataset(Dataset):
-    def __init__(self, data, look_back=3, horizon=7):
+    def __init__(
+        self, data: torch.Tensor, look_back: int = 3, horizon: int = 7
+    ) -> None:
         """
         data: 時系列データ
         look_back: 入力に使うステップ数
@@ -32,25 +34,28 @@ class SinDataset(Dataset):
         self.look_back = look_back
         self.horizon = horizon
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.data) - self.look_back - self.horizon
 
-    def __getitem__(self, idx):
-        X = self.data[idx : idx + self.look_back]
+    def __getitem__(self, idx: int) -> tuple[torch.Tensor, torch.Tensor]:
+        x = self.data[idx : idx + self.look_back]
         y = self.data[idx + self.look_back + self.horizon - 1]
-        return torch.tensor(X, dtype=torch.float32).unsqueeze(-1), torch.tensor(
-            y, dtype=torch.float32
+        return (
+            torch.tensor(x, dtype=torch.float32).unsqueeze(-1),
+            torch.tensor(y, dtype=torch.float32),
         )
 
 
 # --- モデル定義 ---
 class RNNModel(nn.Module):
-    def __init__(self, input_size=1, hidden_size=32, num_layers=1):
+    def __init__(
+        self, input_size: int = 1, hidden_size: int = 32, num_layers: int = 1
+    ) -> None:
         super().__init__()
         self.rnn = nn.RNN(input_size, hidden_size, num_layers, batch_first=True)
         self.fc = nn.Linear(hidden_size, 1)
 
-    def forward(self, x):
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
         out, _ = self.rnn(x)
         out = self.fc(out[:, -1, :])  # 最後のステップの出力のみ使用
         return out
