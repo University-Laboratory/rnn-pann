@@ -2,6 +2,7 @@
     "cSpell.words": [
         "axhline",
         "figsize",
+        "fontsize",
         "Hiragino",
         "markersize",
         "ndarray",
@@ -11,7 +12,10 @@
         "stemp",
         "torchinfo",
         "Tsim",
+        "Tslen",
+        "Vref",
         "xlabel",
-        "ylabel"
+        "ylabel",
+        "ylim"
     ]
 }
