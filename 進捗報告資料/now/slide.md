@@ -33,7 +33,7 @@ Duty 比を 0.6 に、スイッチング周期を 10us に設定
 
 ### 結果
 
-※詳しくは [note13](../notebooks/note13.ipynb) を参照
+※詳しくは [note13](../../notebooks/note13.ipynb) を参照
 
 ![](./images/実機学習結果.png)
 
