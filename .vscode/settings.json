@@ -1,5 +1,6 @@
 {
     "cSpell.words": [
+        "argmin",
         "axhline",
         "figsize",
         "fontsize",
@@ -12,7 +13,9 @@
         "pann",
         "preds",
         "randn",
+        "searchsorted",
         "semilogy",
+        "sharex",
         "skiprows",
         "stemp",
         "suptitle",
