@@ -64,6 +64,7 @@ class BuckConverterRNNModel(nn.Module):
 ```
 
 ## 学習に使った波形
+[詳細はnote15.ipynbを参照](../../notebooks/note15.ipynb)
 
 ```py
 L_true: float = 100e-6
