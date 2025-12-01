@@ -19,36 +19,11 @@ $$v_C(t + \Delta t) = v_C(t) + \frac{\Delta t}{C} \left( i_L - \frac{v_C}{R} \ri
 
 BuckConverterRNNCell
 
-$$h_{t+1}
-=
-\underbrace{
-\begin{bmatrix}
-1 & -\frac{\Delta t}{L} \\
-\frac{\Delta t}{C} & 1 - \frac{\Delta t}{CR}
-\end{bmatrix}
-}_{A}
-h_t
-+
-\underbrace{
-\begin{bmatrix}
-\frac{\Delta t}{L} & 0 \\
-0 & 0
-\end{bmatrix}
-}_{B}
-\begin{bmatrix}
-v_s(t) \\
-u(t)
-\end{bmatrix}
-+
-c$$
+$$h_{t+1}=\underbrace{\begin{bmatrix}1 & -\frac{\Delta t}{L} \\\frac{\Delta t}{C} & 1 - \frac{\Delta t}{CR}\end{bmatrix}}_{A}h_t+\underbrace{\begin{bmatrix}\frac{\Delta t}{L} & 0 \\0 & 0\end{bmatrix}}_{B}\begin{bmatrix}v_s(t) \\u(t)\end{bmatrix}+c$$
 
 $$v_s(t) = V_{in} * u(t)$$
 
-$$h_t =
-\begin{bmatrix}
-i_L(t) \\
-v_C(t)
-\end{bmatrix}$$
+$$h_t =\begin{bmatrix}i_L(t) \\v_C(t)\end{bmatrix}$$
 
 BuckConverterRNNModel は、BuckConverterRNNCell を繰り返し適用して自己ループを再現する
 
