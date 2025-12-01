@@ -10,3 +10,4 @@ wheels/
 .cursor
 
 data/csv/
+tmp/
