@@ -31,9 +31,9 @@ python notebooks/note17.py
 実行時に表示される保存先にログが保存される
 
 ```text
-ログ保存先: /rnn-pann/results/20251203_160816_352_note17/log.md
+ログ保存先: /rnn-pann/results/{filename}/log.md
 実行中です...
 finish
-ログ保存先: /rnn-pann/results/20251203_160816_352_note17/log.md
+ログ保存先: /rnn-pann/results/{filename}/log.md
 実行が完了しました
 ```
