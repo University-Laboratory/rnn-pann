@@ -25,12 +25,12 @@ torch.manual_seed(seed)
 torch.cuda.manual_seed(seed)
 
 # 真値パラメータ（すべてのデータセットで共通）
-L_true: float = 200e-6
-C_true: float = 48e-6
-R_true: float = 10
+L_true: float = 50e-6
+C_true: float = 18e-6
+R_true: float = 22
 
-Vin: float = 10
-Vref: float = 6
+Vin: float = 20
+Vref: float = 12
 f_sw: float = 1e5  # スイッチング周波数
 points_per_cycle: int = 200  # 1周期あたりのプロット数
 cycles: int = 1000  # 周期数
