@@ -25,9 +25,9 @@ torch.manual_seed(seed)
 torch.cuda.manual_seed(seed)
 
 # 真値パラメータ（すべてのデータセットで共通）
-L_true: float = 50e-6
-C_true: float = 18e-6
-R_true: float = 22
+L_true: float = 200e-6
+C_true: float = 48e-6
+R_true: float = 10
 
 Vin: float = 20
 Vref: float = 12
@@ -37,20 +37,20 @@ cycles: int = 1000  # 周期数
 
 
 # 学習に使うデータの長さ
-tail_len = points_per_cycle * 10
+tail_len = points_per_cycle * 7
 train_ratio = 0.3
 valid_ratio = 0.3
 # test_ratio = 1 - train_ratio - valid_ratio
 
 # 学習パラメータ
-L_init = 200e-6
+L_init = 100e-6
 C_init = 100e-6
 R_init = 8.0
 
 # 異なるパラメータに異なる学習率を設定
-lr_L = 1e-2
-lr_C = 5e-2
-lr_R = 2e-2
+lr_L = 2e-3
+lr_C = 2e-2
+lr_R = 2e-3
 
 epochs = 1000
 
@@ -305,11 +305,14 @@ def buck_converter_training_from_simulation(
     result_text.append(f"  スイッチング周波数 f_sw = {f_sw:.0f} [Hz]")
     result_text.append(f"  1周期あたりのプロット数 = {points_per_cycle}")
     result_text.append("")
-    result_text.append("【学習設定】")
-    result_text.append(f"  エポック数 = {epochs}")
-    result_text.append(f"  学習率: L = {lr_L:.2e}, C = {lr_C:.2e}, R = {lr_R:.2e}")
-    result_text.append("")
     result_text.append("【データ分割】")
+    result_text.append(
+        f"  シミュレーション時間: {cycles}周期 = {cycles * T * 1e6:.1f}μs"
+    )
+    result_text.append(
+        f"  後ろから約{int(tail_len / points_per_cycle)}周期"
+        f"({tail_len}ステップ, ={tail_len * dt_10.mean() * 1e6:.1f}μs)を使用"
+    )
     result_text.append(f"  学習データ: {train_len} ステップ")
     result_text.append(f"  検証データ: {valid_len} ステップ")
     result_text.append(f"  テストデータ: {len(t_10) - train_len - valid_len} ステップ")

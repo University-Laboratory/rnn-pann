@@ -1,0 +1,23 @@
+{
+  "hash": "71e9df3d0af320cd2cc8f00977c21a2df46cd0863755d6d57efb3e78ad1752e2",
+  "config": {
+    "L_true": 0.0002,
+    "C_true": 4.8e-05,
+    "R_true": 10,
+    "Vin": 20,
+    "Vref": 12,
+    "f_sw": 100000.0,
+    "points_per_cycle": 200,
+    "cycles": 1000,
+    "tail_len": 1400,
+    "train_ratio": 0.3,
+    "valid_ratio": 0.3,
+    "L_init": 0.0001,
+    "C_init": 0.0001,
+    "R_init": 8.0,
+    "lr_L": 0.002,
+    "lr_C": 0.02,
+    "lr_R": 0.002,
+    "epochs": 1000
+  }
+}
