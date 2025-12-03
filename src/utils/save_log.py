@@ -119,8 +119,9 @@ def create_result_dir(
         if existing_dir is not None:
             return existing_dir
 
-    # タイムスタンプを生成（yyyyMMdd_hhmmss）
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    # タイムスタンプを生成（yyyyMMdd_HHMMSS_mmm 形式，ミリ秒単位まで含める）
+    now = datetime.now()
+    timestamp = now.strftime("%Y%m%d_%H%M%S_") + f"{int(now.microsecond / 1000):03d}"
 
     # ディレクトリ名を生成（例: 20251203_145714_note17）
     dir_name = f"{timestamp}_{notebook_name}"
