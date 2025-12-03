@@ -23,7 +23,7 @@ dependencies = [
 rnn-pann = "rnn_pann:main"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/codebook"]
+packages = ["src"]
 
 [build-system]
 requires = ["hatchling"]
