@@ -4,6 +4,7 @@
         "axhline",
         "figsize",
         "fontsize",
+        "fontweight",
         "Glorot",
         "Hiragino",
         "imshow",
@@ -28,6 +29,7 @@
         "Vref",
         "xlabel",
         "ylabel",
-        "ylim"
+        "ylim",
+        "yscale"
     ]
 }
