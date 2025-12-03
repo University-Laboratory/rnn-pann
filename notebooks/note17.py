@@ -137,6 +137,7 @@ def buck_converter_training_from_simulation(
     result_dir = create_result_dir("note17", config_dict=config_dict)
     _ = init_log(result_dir, "notebooks/note17.ipynb")
     print(f"ログ保存先: {result_dir}/log.md")
+    print("実行中です...")
 
     duty: float = Vref / Vin
     T: float = 1 / f_sw  # 1周期の実時間
@@ -534,6 +535,8 @@ def buck_converter_training_from_simulation(
     save_figure_to_log(fig, "test_prediction", result_dir, "テストデータでの予測結果")
 
     print("finish")
+    print(f"ログ保存先: {result_dir}/log.md")
+    print("実行が完了しました")
 
 
 if __name__ == "__main__":
