@@ -135,7 +135,7 @@ def buck_converter_training_from_simulation(
 
     # ログ保存の初期化
     result_dir = create_result_dir("note17", config_dict=config_dict)
-    _ = init_log(result_dir, "notebooks/note17.ipynb")
+    _ = init_log(result_dir, "notebooks/note17.py")
     print(f"ログ保存先: {result_dir}/log.md")
     print("実行中です...")
 
