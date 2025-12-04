@@ -1,0 +1,22 @@
+{
+  "hash": "901d6ca5ee3c246d13e35a7a123dc48d0437f14876e4d4ac0929df58cace40f9",
+  "config": {
+    "data_path": "../data/csv/tek0000ALL.csv",
+    "start_time": 0.00169,
+    "end_time": 0.00179,
+    "steps": 2001,
+    "L_true": 0.0001,
+    "C_true": 4.8e-05,
+    "R_true": 10,
+    "Vin": 10,
+    "Vref": 6,
+    "f_sw": 100000.0,
+    "L_init": 0.0002,
+    "C_init": 0.0001,
+    "R_init": 8.0,
+    "lr_L": 0.05,
+    "lr_C": 0.01,
+    "lr_R": 0.02,
+    "epochs": 1000
+  }
+}
