@@ -1,8 +1,6 @@
 # actual_machine_notebooks/note1.ipynb 実行ログ
 
-実行日時: 2025-12-04 18:30:25
-
----
+実行日時: 2025-12-05 12:04:50
 
 ## 最終結果
 
@@ -41,7 +39,7 @@
 
 ![training_data](images/training_data.png)
 
-## Lossの遷移
+## Loss の遷移
 
 ![loss_transition](images/loss_transition.png)
 
@@ -49,7 +47,10 @@
 
 ![parameter_learning](images/parameter_learning.png)
 
-## 学習済みモデルでの予測結果
+## テストデータ区間で学習済みモデルでの予測結果
 
 ![test_prediction](images/test_prediction.png)
 
+## 学習済みモデルでの予測結果
+
+![test_prediction_all](images/test_prediction_all.png)
