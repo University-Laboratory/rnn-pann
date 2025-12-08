@@ -90,3 +90,23 @@
 
 ![buck_gru_combined_vC_separate](images/buck_gru_combined_vC_separate.png)
 
+## 真の回路シミュレーション & 実測値比較
+
+![true_circuit_sim_and_measured](images/true_circuit_sim_and_measured.png)
+
+## 真の回路シミュレーション & 実測値比較
+
+![true_circuit_sim_and_measured](images/true_circuit_sim_and_measured.png)
+
+## 真の回路シミュレーション & 実測値比較
+
+![true_circuit_sim_and_measured](images/true_circuit_sim_and_measured.png)
+
+## 真の回路シミュレーション & 実測値比較
+
+![true_circuit_sim_and_measured](images/true_circuit_sim_and_measured.png)
+
+## 真の回路シミュレーション & 実測値比較
+
+![true_circuit_sim_and_measured](images/true_circuit_sim_and_measured.png)
+

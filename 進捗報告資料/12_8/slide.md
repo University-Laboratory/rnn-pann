@@ -91,6 +91,8 @@ class GRUModel(nn.Module):
 
 ![true_circuit_sim_and_measured](images/true_circuit_sim_and_measured.png)
 
+![true_circuit_sim_and_measured_copy](<images/true_circuit_sim_and_measured(拡大).png>)
+
 - 実機データだけ見てたら定常っぽかったが、シミュレーションを見ると定常っぽくない
 
 ### 学習データ
