@@ -7,7 +7,7 @@
 
 # 目的
 
-BuckConverterCell と GRU を組み合わせて、実機データをシミュレーションした結果と比較する
+BuckConverterCell と GRU を組み合わせて学習、シミュレーションし、実機データと比較する
 
 [詳細は actual_machine_notebooks/note1/note1.ipynb を参照](../../actual_machine_notebooks/note1/note1.ipynb)
 
