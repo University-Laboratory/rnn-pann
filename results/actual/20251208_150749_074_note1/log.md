@@ -1,6 +1,6 @@
 # actual_machine_notebooks/note1/note1.ipynb 実行ログ
 
-実行日時: 2025-12-08 14:43:13
+実行日時: 2025-12-08 15:07:49
 
 ---
 
@@ -10,11 +10,12 @@
 === Buck Converter Cell ===
 
 【回路パラメータ】
+  真の値: L = 2.236000e-04 [H], C = 7.380000e-05 [F], R = 5.000 [Ω]
   初期値: L = 2.000000e-04 [H], C = 1.000000e-04 [F], R = 8.000 [Ω]
-  推論値: L = 2.464634e-04 [H], C = 6.074582e-08 [F], R = 5.267 [Ω]
+  推論値: L = 2.668910e-04 [H], C = 6.074582e-08 [F], R = 5.267 [Ω]
 
 【入力条件】
-  Vin (入力電圧) = 10.00 [V], Vref (目標電圧) = 6.00 [V]
+  Vin (入力電圧) = 10.00 [V], Vref (目標電圧) = 5.00 [V]
   スイッチング周波数 f_sw = 100000 [Hz]
   1周期あたりのプロット数 = 200
 
@@ -25,9 +26,9 @@
   テストデータ: 801 ステップ
 
 【最終Loss】
-  学習データ: 6.635875e-03
-  検証データ: 6.009395e-03
-  テストデータ: 5.414745e-03
+  学習データ: 6.635946e-03
+  検証データ: 6.009466e-03
+  テストデータ: 5.414776e-03
 
 【学習設定】
   エポック数: 1000
@@ -44,6 +45,10 @@
 ## GRU モデル構造
 
 ![gru](images/gru.png)
+
+## 真の回路シミュレーション & 実測値比較
+
+![true_circuit_sim_and_measured](images/true_circuit_sim_and_measured.png)
 
 ## 学習データ
 
@@ -69,9 +74,9 @@
 
 ![gru_training_data_features](images/gru_training_data_features.png)
 
-## Lossの遷移
+## GRU Lossの遷移
 
-![loss_transition](images/loss_transition.png)
+![gru_loss_transition](images/gru_loss_transition.png)
 
 ## Comparison of BuckConverterCell + GRU prediction and measured data
 

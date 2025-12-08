@@ -1,12 +1,12 @@
 {
-  "hash": "b27ed42be7fb38325fabcc88755d7f78b008dfab346082db91a23475a310e63c",
+  "hash": "d5f4c9ec8df18f088b94d5cf1921450ea2a6085591cb4c3b0535e666a98cdc6d",
   "config": {
-    "L_true": 0.0001,
-    "C_true": 4.8e-05,
-    "R_true": 10,
+    "L_true": 0.0002236,
+    "C_true": 7.38e-05,
+    "R_true": 5,
     "Vin": 10,
-    "Vref": 6,
-    "duty": 0.6,
+    "Vref": 5,
+    "duty": 0.5,
     "f_sw": 100000.0,
     "T": 1e-05,
     "train_ratio": 0.3,
