@@ -126,6 +126,8 @@ class GRUModel(nn.Module):
 
 ### GRU 学習データ
 
+- 前の 10 個分から次の 1 つを予測するように実装
+
 ![gru_training_data_features](images/gru_training_data_features.png)
 
 ### GRU Loss の遷移
