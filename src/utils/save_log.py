@@ -295,3 +295,48 @@ def save_figure_to_log(
             f.write(f"## {title}\n\n")
         relative_path = image_path.relative_to(result_dir)
         f.write(f"![{filename}]({relative_path})\n\n")
+
+
+def save_graphviz_to_log(
+    graphviz_graph: object,
+    filename: str,
+    result_dir: Path,
+    title: str | None = None,
+    format: str = "png",
+) -> Path:
+    """
+    Graphvizのグラフを保存してログに追加する
+    torchviewのdraw_graphで生成されたグラフなどに対応
+
+    Args:
+        graphviz_graph: Graphvizのグラフオブジェクト（render()メソッドを持つ）
+        filename: 保存するファイル名（拡張子なし）
+        result_dir: 結果ディレクトリのPathオブジェクト
+        title: セクションタイトル（オプション）
+        format: 画像フォーマット（デフォルト: "png"）
+
+    Returns:
+        保存された画像ファイルのPathオブジェクト
+    """
+    # imagesディレクトリに保存
+    images_dir = result_dir / "images"
+    images_dir.mkdir(exist_ok=True)
+
+    # ファイルパスを構築
+    image_path = images_dir / f"{filename}.{format}"
+
+    # Graphvizのグラフをレンダリングして保存
+    graphviz_graph.render(
+        filename=str(image_path.with_suffix("")),  # 拡張子なしで渡す
+        format=format,
+    )
+
+    # ログに追加
+    log_path = result_dir / "log.md"
+    with open(log_path, "a", encoding="utf-8") as f:
+        if title:
+            f.write(f"## {title}\n\n")
+        relative_path = image_path.relative_to(result_dir)
+        f.write(f"![{filename}]({relative_path})\n\n")
+
+    return image_path
