@@ -1,6 +1,6 @@
 # actual_machine_notebooks/note1/note1.ipynb 実行ログ
 
-実行日時: 2025-12-08 15:07:49
+実行日時: 2025-12-08 17:14:05
 
 ---
 
@@ -50,6 +50,10 @@
 
 ![true_circuit_sim_and_measured](images/true_circuit_sim_and_measured.png)
 
+## 真の回路シミュレーション & 実測値比較 学習に使った部分拡大
+
+![true_circuit_sim_and_measured_expansion](images/true_circuit_sim_and_measured_expansion.png)
+
 ## 学習データ
 
 ![training_data](images/training_data.png)
@@ -78,35 +82,15 @@
 
 ![gru_loss_transition](images/gru_loss_transition.png)
 
-## Comparison of BuckConverterCell + GRU prediction and measured data
+## BuckConverterCell + GRU の推論結果
 
 ![buck_gru_combined_comparison](images/buck_gru_combined_comparison.png)
 
-## Inductor Current $i_L$: Separate predictions
+## インダクタ電流 $i_L$ の推論結果
 
 ![buck_gru_combined_iL_separate](images/buck_gru_combined_iL_separate.png)
 
-## Capacitor Voltage $v_C$: Separate predictions
+## コンデンサ電圧 $v_C$ の推論結果
 
 ![buck_gru_combined_vC_separate](images/buck_gru_combined_vC_separate.png)
-
-## 真の回路シミュレーション & 実測値比較
-
-![true_circuit_sim_and_measured](images/true_circuit_sim_and_measured.png)
-
-## 真の回路シミュレーション & 実測値比較
-
-![true_circuit_sim_and_measured](images/true_circuit_sim_and_measured.png)
-
-## 真の回路シミュレーション & 実測値比較
-
-![true_circuit_sim_and_measured](images/true_circuit_sim_and_measured.png)
-
-## 真の回路シミュレーション & 実測値比較
-
-![true_circuit_sim_and_measured](images/true_circuit_sim_and_measured.png)
-
-## 真の回路シミュレーション & 実測値比較
-
-![true_circuit_sim_and_measured](images/true_circuit_sim_and_measured.png)
 
