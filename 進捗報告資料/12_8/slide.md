@@ -140,11 +140,9 @@ class GRUModel(nn.Module):
 
 ![buck_gru_combined_comparison](images/buck_gru_combined_comparison.png)
 
-### バラバラグラフで(iL)
+重なってみづらかったので別のグラフにした
 
 ![buck_gru_combined_iL_separate](images/buck_gru_combined_iL_separate.png)
-
-### バラバラグラフで(vC)
 
 ![buck_gru_combined_vC_separate](images/buck_gru_combined_vC_separate.png)
 
