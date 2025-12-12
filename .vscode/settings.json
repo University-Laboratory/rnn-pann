@@ -11,6 +11,7 @@
         "interp",
         "markersize",
         "Matplotlib",
+        "nbins",
         "ndarray",
         "pann",
         "preds",

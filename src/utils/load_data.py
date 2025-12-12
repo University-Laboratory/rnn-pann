@@ -15,7 +15,9 @@ def load_data(
     path: str = path_list.path0,
     skiprows: int = 20,  # ヘッダーの行数
     downsample_step: int = 125,
-    start_time: float = 0.00005,  # シミュレーションの開始時間
+    T: float = 1e-6,  # 1周期の実時間[s]
+    cycles: int = 10,  # 末尾から何周期分切り出すか
+    start_time_offset: float = 0.0000005,  # ズレ補正値[s]
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     df = pd.read_csv(path, skiprows=skiprows)
 
@@ -23,30 +25,39 @@ def load_data(
     iL_raw: np.ndarray = df["CH1"].to_numpy(dtype=np.float32)  # A
     vC_raw: np.ndarray = df["CH2"].to_numpy(dtype=np.float32)  # V
 
-    t_all: np.ndarray = t_raw + start_time
-    mask: np.ndarray = t_all >= 0
-    t_all = t_all[mask]
-    iL_all = iL_raw[mask]
-    vC_all = vC_raw[mask]
+    if cycles <= 0:
+        raise ValueError("cycles must be positive.")
+    if T <= 0:
+        raise ValueError("T must be positive.")
+    if downsample_step <= 0:
+        raise ValueError("downsample_step must be positive.")
+
+    # 末尾から「cycles*T 秒」分を切り出す
+    if t_raw.size == 0:
+        empty = np.array([], dtype=np.float32)
+        return empty, empty, empty
+
+    t_end = float(t_raw[-1])
+    start_time = t_end - float(cycles + 1) * float(T) + start_time_offset
+    end_time = start_time + float(cycles) * float(T)
+    mask = (t_raw >= start_time) & (t_raw <= end_time)
+
+    # window が長すぎる等で空になった場合は全体を返す
+    if not np.any(mask):
+        t_all = t_raw
+        iL_all = iL_raw
+        vC_all = vC_raw
+    else:
+        t_all = t_raw[mask]
+        iL_all = iL_raw[mask]
+        vC_all = vC_raw[mask]
+
+    # 先頭を0秒にそろえる
+    if t_all.size:
+        t_all = t_all - t_all[0]
 
     t_downsampled: np.ndarray = t_all[::downsample_step]
     iL_downsampled: np.ndarray = iL_all[::downsample_step]
     vC_downsampled: np.ndarray = vC_all[::downsample_step]
 
     return t_downsampled, iL_downsampled, vC_downsampled
-
-
-def load_data_path0() -> tuple[np.ndarray, np.ndarray, np.ndarray]:
-    return load_data(path=path_list.path0)
-
-
-def load_data_path1() -> tuple[np.ndarray, np.ndarray, np.ndarray]:
-    return load_data(path=path_list.path1)
-
-
-def load_data_path2() -> tuple[np.ndarray, np.ndarray, np.ndarray]:
-    return load_data(path=path_list.path2)
-
-
-def load_data_path3() -> tuple[np.ndarray, np.ndarray, np.ndarray]:
-    return load_data(path=path_list.path3)
