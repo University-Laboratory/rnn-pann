@@ -31,4 +31,4 @@ build-backend = "hatchling.build"
 
 [tool.ruff.lint]
 select = ["E", "F", "ANN", "I", "UP", "B", "C", "T", "N"]
-ignore = ["C901", "T201", "T203", "N803", "N806", "N816"]
+ignore = ["C901", "T201", "T203", "N802", "N803", "N806", "N816"]
