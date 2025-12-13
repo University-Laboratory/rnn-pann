@@ -14,18 +14,18 @@ def plot_iLvC(
     title: str,
     show_tail_10: bool = True,
     show_tail_1: bool = True,
-) -> None:
+) -> list[tuple[plt.Figure, plt.Axes]]:
     if T <= 0:
         raise ValueError("T must be positive.")
     if t.size == 0:
-        return
+        return None, None
 
     def _plot_section(
         t_: np.ndarray,
         iL_: np.ndarray,
         vC_: np.ndarray,
         section_title: str,
-    ) -> None:
+    ) -> tuple[plt.Figure, plt.Axes]:
         fig, ax = plt.subplots(nrows=2, ncols=1, figsize=(12, 6), sharex=True)
         ax[0].plot(t_, iL_, color=color_iL)
         ax[0].set_title(section_title)
@@ -39,9 +39,12 @@ def plot_iLvC(
         ax[1].xaxis.set_major_locator(MaxNLocator(nbins=12))
 
         fig.tight_layout()
+        return fig, ax
 
+    figs = []
     # 全体
-    _plot_section(t, iL, vC, section_title=title)
+    fig, ax = _plot_section(t, iL, vC, section_title=title)
+    figs.append((fig, ax))
 
     # 末尾の拡大（10周期 / 1周期）
     t_end = float(t[-1])
@@ -56,6 +59,8 @@ def plot_iLvC(
         mask = t >= (t_end - window)
         _plot_section(t[mask], iL[mask], vC[mask], section_title=f"{title} (tail 1T)")
 
+    return figs
+
 
 def plot_u_vs_iL_vC(
     t: np.ndarray,
@@ -64,7 +69,7 @@ def plot_u_vs_iL_vC(
     iL: np.ndarray,
     vC: np.ndarray,
     title: str = "Training Data",
-) -> None:
+) -> tuple[plt.Figure, plt.Axes]:
     fig, axs = plt.subplots(4, 1, figsize=(14, 10), sharex=True)
 
     # --- u (スイッチング信号) ---
@@ -93,6 +98,7 @@ def plot_u_vs_iL_vC(
     axs[3].set_title(f"{title}: Capacitor voltage vC", fontsize=14, fontweight="bold")
 
     fig.tight_layout()
+    return fig, axs
 
 
 def plot_compare_tail(
@@ -109,7 +115,7 @@ def plot_compare_tail(
     title: str = "Waveform Comparison",
     iL_range: tuple[float, float] | None = None,
     vC_range: tuple[float, float] | None = None,
-) -> None:
+) -> tuple[plt.Figure, plt.Axes]:
     """
     2種類のデータの末尾N周期分を重ねて表示
     """
@@ -187,3 +193,85 @@ def plot_compare_tail(
     ax[1].legend()
     ax[1].grid(True, alpha=0.3)
     fig.tight_layout()
+    return fig, ax
+
+
+def plot_param_learning_progress(
+    param_history: dict[str, list[float]],
+    L_true: float,
+    C_true: float,
+    R_true: float,
+    epochs: int,
+    figsize: tuple[int, int] = (12, 10),
+) -> tuple[plt.Figure, plt.Axes]:
+    """
+    回路パラメータ推定の学習過程をプロットする
+    """
+    # エポック数に応じてx軸を作成
+    epochs_list = list(range(1, epochs + 1))
+
+    fig, axs = plt.subplots(3, 1, figsize=figsize, sharex=True)
+
+    # L
+    axs[0].plot(
+        epochs_list,
+        param_history["L"],
+        label="Estimated",
+        linewidth=2,
+        color="tab:blue",
+    )
+    axs[0].axhline(
+        y=L_true,
+        color="red",
+        linestyle="--",
+        linewidth=2,
+        label=f"True value ({L_true:.6e})",
+    )
+    axs[0].set_ylabel("L [H]")
+    axs[0].set_title("Inductance L: Learning Progress", fontweight="bold")
+    axs[0].grid(True, alpha=0.3)
+    axs[0].legend(fontsize=11)
+
+    # C
+    axs[1].plot(
+        epochs_list,
+        param_history["C"],
+        label="Estimated",
+        linewidth=2,
+        color="tab:green",
+    )
+    axs[1].axhline(
+        y=C_true,
+        color="red",
+        linestyle="--",
+        linewidth=2,
+        label=f"True value ({C_true:.6e})",
+    )
+    axs[1].set_ylabel("C [F]")
+    axs[1].set_title("Capacitance C: Learning Progress", fontweight="bold")
+    axs[1].grid(True, alpha=0.3)
+    axs[1].legend(fontsize=11)
+
+    # R
+    axs[2].plot(
+        epochs_list,
+        param_history["R"],
+        label="Estimated",
+        linewidth=2,
+        color="tab:orange",
+    )
+    axs[2].axhline(
+        y=R_true,
+        color="red",
+        linestyle="--",
+        linewidth=2,
+        label=f"True value ({R_true:.3f})",
+    )
+    axs[2].set_ylabel("R [Ω]")
+    axs[2].set_xlabel("Epoch")
+    axs[2].set_title("Resistance R: Learning Progress", fontweight="bold")
+    axs[2].grid(True, alpha=0.3)
+    axs[2].legend(fontsize=11)
+
+    fig.tight_layout()
+    return fig, axs
