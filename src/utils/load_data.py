@@ -18,12 +18,15 @@ def load_data(
     T: float = 1e-6,  # 1周期の実時間[s]
     cycles: int = 10,  # 末尾から何周期分切り出すか
     start_time_offset: float = 0.0000005,  # ズレ補正値[s]
+    time_label: str = "TIME",
+    iL_label: str = "CH1",
+    vC_label: str = "CH2",
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     df = pd.read_csv(path, skiprows=skiprows)
 
-    t_raw: np.ndarray = df["TIME"].to_numpy(dtype=np.float32)  # 秒
-    iL_raw: np.ndarray = df["CH1"].to_numpy(dtype=np.float32)  # A
-    vC_raw: np.ndarray = df["CH2"].to_numpy(dtype=np.float32)  # V
+    t_raw: np.ndarray = df[time_label].to_numpy(dtype=np.float32)  # 秒
+    iL_raw: np.ndarray = df[iL_label].to_numpy(dtype=np.float32)  # A
+    vC_raw: np.ndarray = df[vC_label].to_numpy(dtype=np.float32)  # V
 
     if cycles <= 0:
         raise ValueError("cycles must be positive.")

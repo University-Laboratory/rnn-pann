@@ -107,10 +107,26 @@ def plot_compare_tail(
     T: float,
     N_cycles: float = 10.0,
     title: str = "Waveform Comparison",
+    iL_range: tuple[float, float] | None = None,
+    vC_range: tuple[float, float] | None = None,
 ) -> None:
     """
     2種類のデータの末尾N周期分を重ねて表示
     """
+
+    default_clip_line_kwargs: dict = {
+        "color": "black",
+        "linestyle": ":",
+        "linewidth": 1.2,
+        "alpha": 0.6,
+    }
+
+    def _draw_clip_lines(
+        ax_: plt.Axes, y_lo: float, y_hi: float, base_label: str
+    ) -> None:
+        ax_.axhline(y=y_lo, label=f"{base_label} lo", **default_clip_line_kwargs)
+        ax_.axhline(y=y_hi, label=f"{base_label} hi", **default_clip_line_kwargs)
+
     # N周期分のマスクを取得
     t_end1 = float(t1[-1])
     t_end2 = float(t2[-1])
@@ -143,6 +159,8 @@ def plot_compare_tail(
     )
     ax[0].set_ylabel("iL [A]")
     ax[0].set_title(f"{title}: iL (Last {N_cycles:.0f} Cycles)")
+    if iL_range is not None:
+        _draw_clip_lines(ax[0], float(iL_range[0]), float(iL_range[1]), "iL clip")
     ax[0].legend()
     ax[0].grid(True, alpha=0.3)
     # vC
@@ -164,6 +182,8 @@ def plot_compare_tail(
     ax[1].set_ylabel("vC [V]")
     ax[1].set_xlabel("Time [μs]")
     ax[1].set_title(f"{title}: vC (Last {N_cycles:.0f} Cycles)")
+    if vC_range is not None:
+        _draw_clip_lines(ax[1], float(vC_range[0]), float(vC_range[1]), "vC clip")
     ax[1].legend()
     ax[1].grid(True, alpha=0.3)
     fig.tight_layout()
