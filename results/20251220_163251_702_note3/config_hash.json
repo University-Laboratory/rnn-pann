@@ -1,0 +1,17 @@
+{
+  "hash": "da92acafa408a38aad20e2c8f92fc6d2e73c151c3ddef482dfb35a3cd46126d5",
+  "config": {
+    "data_path": "../../data/csv/tek0003ALL.csv",
+    "L_true": 0.0002236,
+    "C_true": 7.38e-05,
+    "R_true": 5,
+    "Vin": 10,
+    "Vref": 5,
+    "duty": 0.5,
+    "f_sw": 100000.0,
+    "T": 1e-05,
+    "cycles": 1000,
+    "samples_per_cycle": 200,
+    "clipped_k": 2.0
+  }
+}
