@@ -275,3 +275,259 @@ def plot_param_learning_progress(
 
     fig.tight_layout()
     return fig, axs
+
+
+def plot_buck_gru_components_tail(
+    t: np.ndarray,
+    iL_meas: np.ndarray,
+    vC_meas: np.ndarray,
+    iL_buck: np.ndarray,
+    vC_buck: np.ndarray,
+    iL_gru: np.ndarray,
+    vC_gru: np.ndarray,
+    T: float,
+    N_cycles: float = 4.0,
+    title: str = "Buck + GRU components",
+    include_overlay: bool = True,
+) -> tuple[plt.Figure, np.ndarray, plt.Figure, np.ndarray]:
+    """
+    Overlay(Measured vs Buck+GRU) / Measured / Buck / GRU / (Buck+GRU)
+    を末尾N周期で比較描画する。
+
+    - iL, vC でそれぞれ（overlay込みなら）5段プロットを返す
+    - 入力はすべて同じ時間軸・同じ長さを想定（tは[s]）
+    """
+    if T <= 0:
+        raise ValueError("T must be positive.")
+    if t.size == 0:
+        raise ValueError("t must be non-empty.")
+
+    # 末尾N周期だけ表示（時間で切る）
+    t0: float = float(t[-1] - N_cycles * T)
+    mask: np.ndarray = np.asarray(t >= t0)
+    if not np.any(mask):
+        raise ValueError("mask is empty. Check N_cycles/T and t range.")
+
+    x_us: np.ndarray = np.asarray(t[mask], dtype=float) * 1e6
+
+    iL_sum = np.asarray(iL_buck, dtype=float) + np.asarray(iL_gru, dtype=float)
+    vC_sum = np.asarray(vC_buck, dtype=float) + np.asarray(vC_gru, dtype=float)
+
+    def _ylim(*arrs: np.ndarray) -> tuple[float, float]:
+        y_min = float(min(np.min(a) for a in arrs))
+        y_max = float(max(np.max(a) for a in arrs))
+        y_rng = y_max - y_min
+        if y_rng <= 0:
+            y_rng = max(abs(y_min), 1.0)
+        return (y_min - 0.05 * y_rng, y_max + 0.05 * y_rng)
+
+    # y軸範囲（Measured/Buck/Sumで揃える）
+    iL_ylim = _ylim(
+        np.asarray(iL_meas, dtype=float)[mask],
+        np.asarray(iL_buck, dtype=float)[mask],
+        np.asarray(iL_sum, dtype=float)[mask],
+    )
+    vC_ylim = _ylim(
+        np.asarray(vC_meas, dtype=float)[mask],
+        np.asarray(vC_buck, dtype=float)[mask],
+        np.asarray(vC_sum, dtype=float)[mask],
+    )
+
+    # --- iL: overlay + 4波形 ---
+    nrows: int = 5 if include_overlay else 4
+    fig_iL, axs_iL = plt.subplots(nrows, 1, figsize=(14, 3 * nrows), sharex=True)
+    axs_iL = np.asarray(axs_iL)
+
+    row0: int = 0
+    if include_overlay:
+        axs_iL[0].plot(
+            x_us,
+            np.asarray(iL_meas, dtype=float)[mask],
+            label="Measured",
+            linewidth=2,
+            alpha=0.85,
+            color="tab:blue",
+        )
+        axs_iL[0].plot(
+            x_us,
+            np.asarray(iL_sum, dtype=float)[mask],
+            label="Buck + GRU",
+            linewidth=2,
+            alpha=0.9,
+            color="black",
+        )
+        axs_iL[0].set_ylabel("Inductor Current $i_L$ [A]", fontsize=12)
+        axs_iL[0].set_title(
+            f"{title} / Overlay (Measured vs Buck+GRU) (tail {N_cycles:g} cycles)",
+            fontsize=14,
+        )
+        axs_iL[0].set_ylim(iL_ylim)
+        axs_iL[0].grid(True, alpha=0.3)
+        axs_iL[0].legend(fontsize=11)
+        row0 = 1
+
+    axs_iL[row0 + 0].plot(
+        x_us,
+        np.asarray(iL_meas, dtype=float)[mask],
+        label="Measured",
+        linewidth=2,
+        alpha=0.85,
+        color="tab:blue",
+    )
+    axs_iL[row0 + 0].set_ylabel("Inductor Current $i_L$ [A]", fontsize=12)
+    axs_iL[row0 + 0].set_title(
+        f"{title} / Measured (tail {N_cycles:g} cycles)", fontsize=14
+    )
+    axs_iL[row0 + 0].set_ylim(iL_ylim)
+    axs_iL[row0 + 0].grid(True, alpha=0.3)
+    axs_iL[row0 + 0].legend(fontsize=11)
+
+    axs_iL[row0 + 1].plot(
+        x_us,
+        np.asarray(iL_buck, dtype=float)[mask],
+        label="BuckConverterCell",
+        linewidth=2,
+        alpha=0.85,
+        color="tab:red",
+    )
+    axs_iL[row0 + 1].set_ylabel("Inductor Current $i_L$ [A]", fontsize=12)
+    axs_iL[row0 + 1].set_title(
+        f"{title} / BuckConverterCell (tail {N_cycles:g} cycles)", fontsize=14
+    )
+    axs_iL[row0 + 1].set_ylim(iL_ylim)
+    axs_iL[row0 + 1].grid(True, alpha=0.3)
+    axs_iL[row0 + 1].legend(fontsize=11)
+
+    axs_iL[row0 + 2].plot(
+        x_us,
+        np.asarray(iL_gru, dtype=float)[mask],
+        label="GRU (pred residual)",
+        linewidth=2,
+        alpha=0.85,
+        color="tab:green",
+    )
+    axs_iL[row0 + 2].set_ylabel("Inductor Current $i_L$ [A]", fontsize=12)
+    axs_iL[row0 + 2].set_title(
+        f"{title} / GRU output (tail {N_cycles:g} cycles)", fontsize=14
+    )
+    axs_iL[row0 + 2].grid(True, alpha=0.3)
+    axs_iL[row0 + 2].legend(fontsize=11)
+
+    axs_iL[row0 + 3].plot(
+        x_us,
+        np.asarray(iL_sum, dtype=float)[mask],
+        label="Buck + GRU",
+        linewidth=2,
+        alpha=0.9,
+        color="black",
+    )
+    axs_iL[row0 + 3].set_ylabel("Inductor Current $i_L$ [A]", fontsize=12)
+    axs_iL[row0 + 3].set_xlabel("Time [μs]", fontsize=12)
+    axs_iL[row0 + 3].set_title(
+        f"{title} / Buck+GRU (tail {N_cycles:g} cycles)", fontsize=14
+    )
+    axs_iL[row0 + 3].set_ylim(iL_ylim)
+    axs_iL[row0 + 3].grid(True, alpha=0.3)
+    axs_iL[row0 + 3].legend(fontsize=11)
+
+    fig_iL.tight_layout()
+
+    # --- vC: overlay + 4波形 ---
+    fig_vC, axs_vC = plt.subplots(nrows, 1, figsize=(14, 3 * nrows), sharex=True)
+    axs_vC = np.asarray(axs_vC)
+
+    row0 = 0
+    if include_overlay:
+        axs_vC[0].plot(
+            x_us,
+            np.asarray(vC_meas, dtype=float)[mask],
+            label="Measured",
+            linewidth=2,
+            alpha=0.85,
+            color="tab:blue",
+        )
+        axs_vC[0].plot(
+            x_us,
+            np.asarray(vC_sum, dtype=float)[mask],
+            label="Buck + GRU",
+            linewidth=2,
+            alpha=0.9,
+            color="black",
+        )
+        axs_vC[0].set_ylabel("Capacitor Voltage $v_C$ [V]", fontsize=12)
+        axs_vC[0].set_title(
+            f"{title} / Overlay (Measured vs Buck+GRU) (tail {N_cycles:g} cycles)",
+            fontsize=14,
+        )
+        axs_vC[0].set_ylim(vC_ylim)
+        axs_vC[0].grid(True, alpha=0.3)
+        axs_vC[0].legend(fontsize=11)
+        row0 = 1
+
+    axs_vC[row0 + 0].plot(
+        x_us,
+        np.asarray(vC_meas, dtype=float)[mask],
+        label="Measured",
+        linewidth=2,
+        alpha=0.85,
+        color="tab:blue",
+    )
+    axs_vC[row0 + 0].set_ylabel("Capacitor Voltage $v_C$ [V]", fontsize=12)
+    axs_vC[row0 + 0].set_title(
+        f"{title} / Measured (tail {N_cycles:g} cycles)", fontsize=14
+    )
+    axs_vC[row0 + 0].set_ylim(vC_ylim)
+    axs_vC[row0 + 0].grid(True, alpha=0.3)
+    axs_vC[row0 + 0].legend(fontsize=11)
+
+    axs_vC[row0 + 1].plot(
+        x_us,
+        np.asarray(vC_buck, dtype=float)[mask],
+        label="BuckConverterCell",
+        linewidth=2,
+        alpha=0.85,
+        color="tab:red",
+    )
+    axs_vC[row0 + 1].set_ylabel("Capacitor Voltage $v_C$ [V]", fontsize=12)
+    axs_vC[row0 + 1].set_title(
+        f"{title} / BuckConverterCell (tail {N_cycles:g} cycles)", fontsize=14
+    )
+    axs_vC[row0 + 1].set_ylim(vC_ylim)
+    axs_vC[row0 + 1].grid(True, alpha=0.3)
+    axs_vC[row0 + 1].legend(fontsize=11)
+
+    axs_vC[row0 + 2].plot(
+        x_us,
+        np.asarray(vC_gru, dtype=float)[mask],
+        label="GRU (pred residual)",
+        linewidth=2,
+        alpha=0.85,
+        color="tab:green",
+    )
+    axs_vC[row0 + 2].set_ylabel("Capacitor Voltage $v_C$ [V]", fontsize=12)
+    axs_vC[row0 + 2].set_title(
+        f"{title} / GRU output (tail {N_cycles:g} cycles)", fontsize=14
+    )
+    axs_vC[row0 + 2].grid(True, alpha=0.3)
+    axs_vC[row0 + 2].legend(fontsize=11)
+
+    axs_vC[row0 + 3].plot(
+        x_us,
+        np.asarray(vC_sum, dtype=float)[mask],
+        label="Buck + GRU",
+        linewidth=2,
+        alpha=0.9,
+        color="black",
+    )
+    axs_vC[row0 + 3].set_ylabel("Capacitor Voltage $v_C$ [V]", fontsize=12)
+    axs_vC[row0 + 3].set_xlabel("Time [μs]", fontsize=12)
+    axs_vC[row0 + 3].set_title(
+        f"{title} / Buck+GRU (tail {N_cycles:g} cycles)", fontsize=14
+    )
+    axs_vC[row0 + 3].set_ylim(vC_ylim)
+    axs_vC[row0 + 3].grid(True, alpha=0.3)
+    axs_vC[row0 + 3].legend(fontsize=11)
+
+    fig_vC.tight_layout()
+
+    return fig_iL, axs_iL, fig_vC, axs_vC
