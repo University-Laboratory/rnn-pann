@@ -1,14 +1,14 @@
 {
-  "hash": "d65dceba9ff0e0f886be93b65997f8a755727ea4c82d8def43875b395d2fb9a2",
+  "hash": "d65dceba9ff0e0f886be93b65997f8a755727ea4c82d8def43875b395d2fb9a1",
   "config": {
     "L_true": 0.00022,
-    "C_true": 7.5e-05,
+    "C_true": 7.5e-5,
     "R_true": 5.0,
     "Vin": 10.0,
     "Vref": 5.0,
     "duty": 0.5,
     "f_sw": 100000.0,
-    "T": 1e-05,
+    "T": 1e-5,
     "cycles": 1200,
     "samples_per_cycle": 200,
     "train_cycles": 10,
