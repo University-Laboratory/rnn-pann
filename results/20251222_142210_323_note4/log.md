@@ -1,7 +1,40 @@
+# actual_machine_notebooks/note4/note_sim.ipynb 実行ログ
+
+実行日時: 2025-12-22 14:22:10
+
+---
+
 ## Params
 
 ```
-{'L_true': 0.00022, 'C_true': 7.5e-05, 'R_true': 5.0, 'Vin': 10.0, 'Vref': 5.0, 'duty': 0.5, 'f_sw': 100000.0, 'T': 1e-05, 'cycles': 1200, 'samples_per_cycle': 200, 'train_cycles': 10, 'noise_std_iL': 0.02, 'noise_std_vC': 0.02, 'train_ratio': 0.5, 'valid_ratio': 0.25, 'L_init': 0.0002, 'C_init': 0.0001, 'R_init': 8.0, 'lr_l': 0.005, 'lr_c': 0.001, 'lr_r': 0.002, 'epochs_buck': 8000, 'win_len': 50, 'batch_size': 256, 'grad_clip_norm': 5.0, 'seq_length': 10, 'gru_lr': 0.001, 'epochs_gru': 300}
+C_init: 0.0001
+C_true: 7.5e-05
+L_init: 0.0002
+L_true: 0.00022
+R_init: 8.0
+R_true: 5.0
+T: 1e-05
+Vin: 10.0
+Vref: 5.0
+batch_size: 256
+cycles: 1200
+duty: 0.5
+epochs_buck: 8000
+epochs_gru: 300
+f_sw: 100000.0
+grad_clip_norm: 5.0
+gru_lr: 0.001
+lr_c: 0.001
+lr_l: 0.005
+lr_r: 0.002
+noise_std_iL: 0.02
+noise_std_vC: 0.02
+samples_per_cycle: 200
+seq_length: 10
+train_cycles: 10
+train_ratio: 0.5
+valid_ratio: 0.25
+win_len: 50
 ```
 
 ## 擬似計測波形
@@ -71,3 +104,4 @@ MSE buck=8.811593e-12
 MSE buck+gru=8.608980e-06
 
 ```
+

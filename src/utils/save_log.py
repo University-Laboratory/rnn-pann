@@ -2,6 +2,7 @@ import hashlib
 import json
 from datetime import datetime
 from pathlib import Path
+from typing import Any
 
 import matplotlib.pyplot as plt
 
@@ -266,6 +267,31 @@ def save_text_output(
         f.write("```\n")
         f.write(text)
         f.write("\n```\n\n")
+
+
+def format_kv_lines(data: dict[str, Any], *, sort_keys: bool = True) -> str:
+    """
+    辞書を「key: value」形式で1行ずつのテキストに整形する。
+
+    Args:
+        data: 整形したい辞書
+        sort_keys: keyでソートするか
+
+    Returns:
+        1行1要素のテキスト
+    """
+    items = data.items()
+    if sort_keys:
+        items = sorted(items, key=lambda kv: kv[0])
+
+    lines: list[str] = []
+    for key, value in items:
+        if isinstance(value, (dict, list, tuple)):
+            value_str = json.dumps(value, ensure_ascii=False)
+        else:
+            value_str = str(value)
+        lines.append(f"{key}: {value_str}")
+    return "\n".join(lines)
 
 
 def save_figure_to_log(
