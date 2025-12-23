@@ -24,9 +24,9 @@ def load_data(
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     df = pd.read_csv(path, skiprows=skiprows)
 
-    t_raw: np.ndarray = df[time_label].to_numpy(dtype=np.float32)  # 秒
-    iL_raw: np.ndarray = df[iL_label].to_numpy(dtype=np.float32)  # A
-    vC_raw: np.ndarray = df[vC_label].to_numpy(dtype=np.float32)  # V
+    t_raw: np.ndarray = df[time_label].to_numpy(dtype=np.float64)  # 秒
+    iL_raw: np.ndarray = df[iL_label].to_numpy(dtype=np.float64)  # A
+    vC_raw: np.ndarray = df[vC_label].to_numpy(dtype=np.float64)  # V
 
     if cycles <= 0:
         raise ValueError("cycles must be positive.")
@@ -37,7 +37,7 @@ def load_data(
 
     # 末尾から「cycles*T 秒」分を切り出す
     if t_raw.size == 0:
-        empty = np.array([], dtype=np.float32)
+        empty = np.array([], dtype=np.float64)
         return empty, empty, empty
 
     t_end = float(t_raw[-1])

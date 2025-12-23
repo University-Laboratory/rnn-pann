@@ -1,9 +1,77 @@
+from typing import Any, Literal
+
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.ticker import MaxNLocator
 
 color_iL = "tab:blue"
 color_vC = "tab:orange"
+
+
+PlotStyle = Literal["line", "scatter", "line+marker"]
+
+
+def _plot_series(
+    ax: plt.Axes,
+    x: np.ndarray,
+    y: np.ndarray,
+    *,
+    style: PlotStyle,
+    color: str,
+    label: str | None = None,
+    alpha: float = 1.0,
+    linestyle: str = "-",
+    linewidth: float = 1.5,
+    marker: str = "o",
+    markersize: float = 3.0,
+    zorder: int | None = None,
+    extra_kwargs: dict[str, Any] | None = None,
+) -> None:
+    """
+    matplotlibの描画を line / scatter / line+marker で切り替える薄いラッパ。
+    - style="line": ax.plot
+    - style="scatter": ax.scatter
+    - style="line+marker": ax.plot(marker付き)
+    """
+    kwargs: dict[str, Any] = {}
+    if extra_kwargs:
+        kwargs.update(extra_kwargs)
+
+    if style == "scatter":
+        # sは面積なので、見た目がmarkersizeっぽくなるように二乗を使う
+        ax.scatter(
+            x,
+            y,
+            color=color,
+            label=label,
+            alpha=alpha,
+            marker=marker,
+            s=float(markersize) ** 2,
+            zorder=zorder,
+            **kwargs,
+        )
+        return
+
+    # line / line+marker
+    plot_kwargs: dict[str, Any] = {
+        "color": color,
+        "label": label,
+        "alpha": alpha,
+        "linestyle": linestyle,
+        "linewidth": linewidth,
+    }
+    if style == "line+marker":
+        plot_kwargs.update(
+            {
+                "marker": marker,
+                "markersize": markersize,
+            }
+        )
+    if zorder is not None:
+        plot_kwargs["zorder"] = zorder
+    plot_kwargs.update(kwargs)
+
+    ax.plot(x, y, **plot_kwargs)
 
 
 def plot_iLvC(
@@ -14,11 +82,15 @@ def plot_iLvC(
     title: str,
     show_tail_10: bool = True,
     show_tail_1: bool = True,
+    plot_style: PlotStyle = "line",
+    marker: str = "o",
+    markersize: float = 3.0,
+    linewidth: float = 1.5,
 ) -> list[tuple[plt.Figure, plt.Axes]]:
     if T <= 0:
         raise ValueError("T must be positive.")
     if t.size == 0:
-        return None, None
+        return []
 
     def _plot_section(
         t_: np.ndarray,
@@ -27,12 +99,32 @@ def plot_iLvC(
         section_title: str,
     ) -> tuple[plt.Figure, plt.Axes]:
         fig, ax = plt.subplots(nrows=2, ncols=1, figsize=(12, 6), sharex=True)
-        ax[0].plot(t_, iL_, color=color_iL)
+        _plot_series(
+            ax[0],
+            t_,
+            iL_,
+            style=plot_style,
+            color=color_iL,
+            alpha=1.0,
+            linewidth=linewidth,
+            marker=marker,
+            markersize=markersize,
+        )
         ax[0].set_title(section_title)
         ax[0].set_ylabel("iL [A]")
         ax[0].grid(True, alpha=0.3)
 
-        ax[1].plot(t_, vC_, color=color_vC)
+        _plot_series(
+            ax[1],
+            t_,
+            vC_,
+            style=plot_style,
+            color=color_vC,
+            alpha=1.0,
+            linewidth=linewidth,
+            marker=marker,
+            markersize=markersize,
+        )
         ax[1].set_ylabel("vC [V]")
         ax[1].set_xlabel("t [s]")
         ax[1].grid(True, alpha=0.3)
@@ -115,10 +207,20 @@ def plot_compare_tail(
     title: str = "Waveform Comparison",
     iL_range: tuple[float, float] | None = None,
     vC_range: tuple[float, float] | None = None,
+    style1: PlotStyle = "line",
+    style2: PlotStyle = "line",
+    marker1: str = "o",
+    marker2: str = "s",
+    markersize: float = 3.0,
+    linewidth: float = 1.5,
 ) -> tuple[plt.Figure, plt.Axes]:
     """
     2種類のデータの末尾N周期分を重ねて表示
     """
+    if T <= 0:
+        raise ValueError("T must be positive.")
+    if t1.size == 0 or t2.size == 0:
+        raise ValueError("t1/t2 must be non-empty.")
 
     default_clip_line_kwargs: dict = {
         "color": "black",
@@ -148,20 +250,31 @@ def plot_compare_tail(
 
     fig, ax = plt.subplots(2, 1, figsize=(12, 6), sharex=True)
     # iL
-    ax[0].plot(
+    _plot_series(
+        ax[0],
         t1_view * 1e6,
         iL1_view,
-        label=label1,
+        style=style1,
         color=color_iL,
+        label=label1,
         alpha=0.7,
+        linestyle="-",
+        linewidth=linewidth,
+        marker=marker1,
+        markersize=markersize,
     )
-    ax[0].plot(
+    _plot_series(
+        ax[0],
         t2_view * 1e6,
         iL2_view,
-        label=label2,
+        style=style2,
         color=color_vC,
+        label=label2,
         alpha=0.7,
         linestyle="--",
+        linewidth=linewidth,
+        marker=marker2,
+        markersize=markersize,
     )
     ax[0].set_ylabel("iL [A]")
     ax[0].set_title(f"{title}: iL (Last {N_cycles:.0f} Cycles)")
@@ -170,20 +283,31 @@ def plot_compare_tail(
     ax[0].legend()
     ax[0].grid(True, alpha=0.3)
     # vC
-    ax[1].plot(
+    _plot_series(
+        ax[1],
         t1_view * 1e6,
         vC1_view,
-        label=label1,
+        style=style1,
         color=color_iL,
+        label=label1,
         alpha=0.7,
+        linestyle="-",
+        linewidth=linewidth,
+        marker=marker1,
+        markersize=markersize,
     )
-    ax[1].plot(
+    _plot_series(
+        ax[1],
         t2_view * 1e6,
         vC2_view,
-        label=label2,
+        style=style2,
         color=color_vC,
+        label=label2,
         alpha=0.7,
         linestyle="--",
+        linewidth=linewidth,
+        marker=marker2,
+        markersize=markersize,
     )
     ax[1].set_ylabel("vC [V]")
     ax[1].set_xlabel("Time [μs]")
