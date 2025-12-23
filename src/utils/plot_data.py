@@ -80,8 +80,7 @@ def plot_iLvC(
     vC: np.ndarray,
     T: float,
     title: str,
-    show_tail_10: bool = True,
-    show_tail_1: bool = True,
+    show_tail: tuple = (10.0, 1.0),
     plot_style: PlotStyle = "line",
     marker: str = "o",
     markersize: float = 3.0,
@@ -141,15 +140,12 @@ def plot_iLvC(
     # 末尾の拡大（10周期 / 1周期）
     t_end = float(t[-1])
 
-    if show_tail_10:
-        window = 10.0 * T
+    for tail_window in show_tail:
+        window = tail_window * T
         mask = t >= (t_end - window)
-        _plot_section(t[mask], iL[mask], vC[mask], section_title=f"{title} (tail 10T)")
-
-    if show_tail_1:
-        window = 1.0 * T
-        mask = t >= (t_end - window)
-        _plot_section(t[mask], iL[mask], vC[mask], section_title=f"{title} (tail 1T)")
+        _plot_section(
+            t[mask], iL[mask], vC[mask], section_title=f"{title} (tail {tail_window}T)"
+        )
 
     return figs
 
