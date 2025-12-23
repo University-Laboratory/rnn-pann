@@ -11,3 +11,5 @@ wheels/
 
 data/csv/
 tmp/
+
+data/_tmp_sanity/

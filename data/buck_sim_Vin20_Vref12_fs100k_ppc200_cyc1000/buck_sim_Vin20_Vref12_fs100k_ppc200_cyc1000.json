@@ -1,0 +1,43 @@
+{
+  "generator": "actual_machine_notebooks/utils/create_csv_data.ipynb",
+  "created_at": "2025-12-22T09:34:21.781584+00:00",
+  "model": "BuckConverterCell",
+  "config": {
+    "L": 0.0002,
+    "C": 4.8e-05,
+    "R": 10.0,
+    "Vin": 20.0,
+    "Vref": 12.0,
+    "f_sw": 100000.0,
+    "samples_per_cycle": 200,
+    "cycles": 1000,
+    "iL0": 0.0,
+    "vC0": 0.0,
+    "dataset_name": "buck_sim_Vin20_Vref12_fs100k_ppc200_cyc1000",
+    "T": 1e-05,
+    "duty": 0.6
+  },
+  "n_steps": 200000,
+  "columns": [
+    "t",
+    "t_next",
+    "dt",
+    "vs",
+    "u",
+    "iL",
+    "vC",
+    "iL_next",
+    "vC_next"
+  ],
+  "units": {
+    "t": "s",
+    "t_next": "s",
+    "dt": "s",
+    "vs": "V",
+    "u": "-",
+    "iL": "A",
+    "vC": "V",
+    "iL_next": "A",
+    "vC_next": "V"
+  }
+}
