@@ -441,6 +441,40 @@ def plot_buck_gru_components_tail(
             y_rng = max(abs(y_min), 1.0)
         return (y_min - 0.05 * y_rng, y_max + 0.05 * y_rng)
 
+    def _ylim_same_span_as(
+        reference_ylim: tuple[float, float], arr: np.ndarray
+    ) -> tuple[float, float]:
+        """
+        参照ylimの「幅」だけをコピーし、中心は0付近（収まらない場合はデータ中心）にする。
+
+        - 軸は独立のまま（shareyしない）
+        - 表示レンジ幅を揃えて、ノイズが過大に見えるのを防ぐ
+        """
+        ref_span: float = float(reference_ylim[1] - reference_ylim[0])
+        if ref_span <= 0:
+            ref_span = 1.0
+
+        y = np.asarray(arr, dtype=float)
+        y_min = float(np.min(y))
+        y_max = float(np.max(y))
+        y_span = y_max - y_min
+
+        # データが参照幅に収まらない場合だけ、幅を少し広げてクリップを避ける
+        span: float = max(ref_span, 1.05 * y_span)
+
+        # 原則は0中心（残差なので）
+        center: float = 0.0
+        low = center - span / 2.0
+        high = center + span / 2.0
+
+        # 0中心で収まらないならデータ中心へ移動（幅は維持）
+        if (y_min < low) or (y_max > high):
+            center = 0.5 * (y_min + y_max)
+            low = center - span / 2.0
+            high = center + span / 2.0
+
+        return (float(low), float(high))
+
     # y軸範囲（Measured/Buck/Sumで揃える）
     iL_ylim = _ylim(
         np.asarray(iL_meas, dtype=float)[mask],
@@ -452,6 +486,8 @@ def plot_buck_gru_components_tail(
         np.asarray(vC_buck, dtype=float)[mask],
         np.asarray(vC_sum, dtype=float)[mask],
     )
+    iL_gru_ylim = _ylim_same_span_as(iL_ylim, np.asarray(iL_gru, dtype=float)[mask])
+    vC_gru_ylim = _ylim_same_span_as(vC_ylim, np.asarray(vC_gru, dtype=float)[mask])
 
     # --- iL: overlay + 4波形 ---
     nrows: int = 5 if include_overlay else 4
@@ -530,6 +566,7 @@ def plot_buck_gru_components_tail(
     axs_iL[row0 + 2].set_title(
         f"{title} / GRU output (tail {N_cycles:g} cycles)", fontsize=14
     )
+    axs_iL[row0 + 2].set_ylim(iL_gru_ylim)
     axs_iL[row0 + 2].grid(True, alpha=0.3)
     axs_iL[row0 + 2].legend(fontsize=11)
 
@@ -628,6 +665,7 @@ def plot_buck_gru_components_tail(
     axs_vC[row0 + 2].set_title(
         f"{title} / GRU output (tail {N_cycles:g} cycles)", fontsize=14
     )
+    axs_vC[row0 + 2].set_ylim(vC_gru_ylim)
     axs_vC[row0 + 2].grid(True, alpha=0.3)
     axs_vC[row0 + 2].legend(fontsize=11)
 
