@@ -36,8 +36,8 @@ torch.cuda.manual_seed(seed)
 np.random.seed(seed)
 
 # %%
-keep_log: bool = True
-# keep_log: bool = False
+# keep_log: bool = True
+keep_log: bool = False
 
 
 @dataclass(frozen=True)
@@ -100,6 +100,7 @@ if keep_log:
 
 # %% [markdown]
 # ## 前処理
+#
 
 # %%
 t_raw: np.ndarray = np.linspace(

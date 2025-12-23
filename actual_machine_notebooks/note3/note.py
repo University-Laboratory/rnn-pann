@@ -2,16 +2,6 @@
 # # やること
 #
 
-# %% [markdown]
-# - 頑張って精度あげる
-#   - 前の 10 点から平滑化する
-#   - C の推論値をいい感じにしたいので、R と L を正解値で固定して学習しないようにしてみる
-# - ノイズクリッピングのパラメータ変更
-# - シーケンスサイズ変更
-# - サンプリング数変更
-# - 使う周期数
-#
-
 # %%
 from dataclasses import asdict, dataclass
 
@@ -23,7 +13,9 @@ from torch import nn, optim
 from src.utils.load_data import load_data, path_list
 from src.utils.models import BuckConverterCell, GRUModel
 from src.utils.plot_data import (
+    plot_buck_gru_components_tail,
     plot_compare_tail,
+    plot_iLvC,
     plot_param_learning_progress,
     plot_u_vs_iL_vC,
 )
@@ -47,6 +39,9 @@ class Params:
     L_true: float = 223.6e-6
     C_true: float = 73.8e-6
     R_true: float = 5
+    L_init = 200e-6
+    C_init = 100e-6
+    R_init = 8.0
 
     Vin: int = 10
     Vref: int = 5
@@ -63,16 +58,13 @@ class Params:
     clipped_k: float = 2.0
 
     # 学習パラメータ
-    L_init = 200e-6
-    C_init = 100e-6
-    R_init = 8.0
 
     # 異なるパラメータに異なる学習率を設定
     lr_l = 5e-2
     lr_c = 1e-2
     lr_r = 2e-2
 
-    epochs = 1000
+    epochs = 50000
 
     # GRU学習用のデータ準備（時系列データ）
     seq_length = 10
@@ -109,13 +101,24 @@ if keep_log:
 
 # %%
 # 実機データの読み込み
+# t_raw, iL_raw, vC_raw = load_data(
+#     path=params.data_path,
+#     downsample_step=1,  # ダウンスケールしない
+#     T=params.T,
+#     cycles=params.cycles,
+#     iL_label="CH2",
+#     vC_label="CH1",
+# )
+# シミュレーションデータ
 t_raw, iL_raw, vC_raw = load_data(
-    path=params.data_path,
+    path="../../data/buck_sim_Vin10.0_Vref5.0_fs100000.0_ppc200_cyc1000/buck_sim_Vin10.0_Vref5.0_fs100000.csv",
+    skiprows=0,
     downsample_step=1,  # ダウンスケールしない
     T=params.T,
     cycles=params.cycles,
-    iL_label="CH2",
-    vC_label="CH1",
+    time_label="t",
+    iL_label="iL",
+    vC_label="vC",
 )
 
 # ダウンサンプリング
@@ -385,8 +388,8 @@ if keep_log:
 # %%
 t_sim: np.ndarray = np.linspace(
     0,
-    1000 * params.T,
-    1000 * params.samples_per_cycle + 1,
+    5000 * params.T,
+    5000 * params.samples_per_cycle + 1,
 )
 t_additional = t_downsampled + t_sim[-1]
 t_sim = np.concatenate([t_sim, t_additional])
@@ -436,6 +439,13 @@ if keep_log:
         "シミュレーション結果(0から1000周期までシミュレーションし、定常箇所と実機のデータの比較)",
     )
 
+plot_iLvC(
+    t_sim,
+    iL_sim,
+    vC_sim,
+    T=params.T,
+    title="Simulation Result",
+)
 
 # %% [markdown]
 # # GRU
@@ -718,193 +728,114 @@ if keep_log:
 #
 
 # %%
+# プロット
+N_cycles: int = 4
+T: float = float(params.T)
+seq_len: int = int(params.seq_length)
 
+# --- BuckConverterCell: 実機時間(t_downsampled)に対応する末尾部分を抽出 ---
+n_meas: int = int(len(t_downsampled))
+t_sim_meas_raw: np.ndarray = np.asarray(t_sim[-n_meas:], dtype=float)
 
-iL_min = min(iL_test_actual.min(), iL_buck_pred.min().item(), iL_combined.min().item())
-iL_max = max(iL_test_actual.max(), iL_buck_pred.max().item(), iL_combined.max().item())
-iL_range = iL_max - iL_min
-iL_ylim = (iL_min - iL_range * 0.05, iL_max + iL_range * 0.05)  # 5% margin
+iL_sim_meas: np.ndarray = np.asarray(
+    iL_sim[-n_meas:].detach().cpu().numpy(), dtype=float
+)
+vC_sim_meas: np.ndarray = np.asarray(
+    vC_sim[-n_meas:].detach().cpu().numpy(), dtype=float
+)
 
-vC_min = min(vC_test_actual.min(), vC_buck_pred.min().item(), vC_combined.min().item())
-vC_max = max(vC_test_actual.max(), vC_buck_pred.max().item(), vC_combined.max().item())
-vC_range = vC_max - vC_min
-vC_ylim = (vC_min - vC_range * 0.05, vC_max + vC_range * 0.05)  # 5% margin
+# t_sim末尾は (t_downsampled + offset) なので、offset を引いて合わせる
+offset: float = float(t_sim_meas_raw[0] - float(t_downsampled[0]))
+t_sim_meas: np.ndarray = t_sim_meas_raw - offset  # ≒ t_downsampled
 
-# プロット iL
-fig_iL, axs_iL = plt.subplots(4, 1, figsize=(14, 12), sharex=True)
+# --- test区間をBuck側の時間で切り出す ---
+t_test_np: np.ndarray = np.asarray(t_test, dtype=float)
+start_idx: int = int(np.argmin(np.abs(t_sim_meas - float(t_test_np[0]))))
+end_idx: int = min(start_idx + int(t_test_np.shape[0]), int(t_sim_meas.shape[0]))
 
-# Measured iL
-axs_iL[0].plot(
-    t_test_actual * 1e6,
-    iL_test_actual,
-    label="Measured",
-    linewidth=2,
-    alpha=0.7,
-    color="blue",
-)
-axs_iL[0].set_ylabel("Inductor Current $i_L$ [A]", fontsize=12)
-axs_iL[0].set_title(
-    "Measured Data: Inductor Current $i_L$", fontsize=14, fontweight="bold"
-)
-axs_iL[0].set_ylim(iL_ylim)
-axs_iL[0].grid(True, alpha=0.3)
-axs_iL[0].legend(fontsize=11)
+t_test_used: np.ndarray = t_sim_meas[start_idx:end_idx]
+iL_sim_test: np.ndarray = iL_sim_meas[start_idx:end_idx]
+vC_sim_test: np.ndarray = vC_sim_meas[start_idx:end_idx]
 
-# BuckConverterCell iL
-axs_iL[1].plot(
-    t_test_actual * 1e6,
-    iL_buck_pred,
-    label="BuckConverterCell",
-    linewidth=2,
-    alpha=0.7,
-    color="red",
-)
-axs_iL[1].set_ylabel("Inductor Current $i_L$ [A]", fontsize=12)
-axs_iL[1].set_title(
-    "BuckConverterCell Prediction: Inductor Current $i_L$",
-    fontsize=14,
-    fontweight="bold",
-)
-axs_iL[1].set_ylim(iL_ylim)
-axs_iL[1].grid(True, alpha=0.3)
-axs_iL[1].legend(fontsize=11)
+# --- Measured(test) を同じ長さだけ取り出す ---
+start_test_idx: int = int(train_len + valid_len)  # t_testと同じ開始位置
 
-# GRU iL
-axs_iL[2].plot(
-    t_test_actual * 1e6,
-    iL_noise_cumulative,
-    label="GRU",
-    linewidth=2,
-    alpha=0.7,
-    color="green",
+iL_meas_test: np.ndarray = np.asarray(
+    iL_downsampled[start_test_idx : start_test_idx + int(t_test_used.shape[0])],
+    dtype=float,
 )
-axs_iL[2].set_ylabel("Inductor Current $i_L$ [A]", fontsize=12)
-axs_iL[2].set_xlabel("Time [μs]", fontsize=12)
-axs_iL[2].set_title(
-    "GRU Prediction: Inductor Current $i_L$",
-    fontsize=14,
-    fontweight="bold",
+vC_meas_test: np.ndarray = np.asarray(
+    vC_downsampled[start_test_idx : start_test_idx + int(t_test_used.shape[0])],
+    dtype=float,
 )
-# axs_iL[2].set_ylim(iL_ylim)
-axs_iL[2].grid(True, alpha=0.3)
-axs_iL[2].legend(fontsize=11)
 
+# --- GRU出力(pred_noise)は t_test[:-1][seq_len:] に対応 ---
+t_noise_local: np.ndarray = np.asarray(t_test_used[:-1], dtype=float)[seq_len:]
+pred_noise_np: np.ndarray = np.asarray(pred_noise, dtype=float)
 
-# BuckConverterCell + GRU iL
-axs_iL[3].plot(
-    t_test_actual * 1e6,
-    iL_combined,
-    label="BuckConverterCell + GRU",
-    linewidth=2,
-    alpha=0.7,
-    color="green",
+min_len2: int = int(
+    min(
+        t_noise_local.shape[0],
+        pred_noise_np.shape[0],
+        iL_sim_test.shape[0] - 1 - seq_len,
+        vC_sim_test.shape[0] - 1 - seq_len,
+        iL_meas_test.shape[0] - 1 - seq_len,
+        vC_meas_test.shape[0] - 1 - seq_len,
+    )
 )
-axs_iL[3].set_ylabel("Inductor Current $i_L$ [A]", fontsize=12)
-axs_iL[3].set_xlabel("Time [μs]", fontsize=12)
-axs_iL[3].set_title(
-    "BuckConverterCell + GRU Prediction: Inductor Current $i_L$",
-    fontsize=14,
-    fontweight="bold",
-)
-axs_iL[3].set_ylim(iL_ylim)
-axs_iL[3].grid(True, alpha=0.3)
-axs_iL[3].legend(fontsize=11)
 
-plt.tight_layout()
-plt.show()
+if min_len2 <= 0:
+    raise ValueError(
+        "長さが合わず、描画できません。"
+        " t_test/t_sim/pred_noise/seq_length の整合を確認してください。"
+    )
 
-# vC comparison - separate subplots
-fig_vC, axs_vC = plt.subplots(4, 1, figsize=(14, 12), sharex=True)
+# すべて同じ長さに揃える
+# t は [s]
+t_view: np.ndarray = t_noise_local[:min_len2]
 
-# Measured vC
-axs_vC[0].plot(
-    t_test_actual * 1e6,
-    vC_test_actual,
-    label="Measured",
-    linewidth=2,
-    alpha=0.7,
-    color="blue",
-)
-axs_vC[0].set_ylabel("Capacitor Voltage $v_C$ [V]", fontsize=12)
-axs_vC[0].set_title(
-    "Measured Data: Capacitor Voltage $v_C$", fontsize=14, fontweight="bold"
-)
-axs_vC[0].set_ylim(vC_ylim)
-axs_vC[0].grid(True, alpha=0.3)
-axs_vC[0].legend(fontsize=11)
+iL_meas: np.ndarray = np.asarray(iL_meas_test[:-1], dtype=float)[
+    seq_len : seq_len + min_len2
+]
+vC_meas: np.ndarray = np.asarray(vC_meas_test[:-1], dtype=float)[
+    seq_len : seq_len + min_len2
+]
 
-# BuckConverterCell vC
-axs_vC[1].plot(
-    t_test_actual * 1e6,
-    vC_buck_pred,
-    label="BuckConverterCell",
-    linewidth=2,
-    alpha=0.7,
-    color="red",
-)
-axs_vC[1].set_ylabel("Capacitor Voltage $v_C$ [V]", fontsize=12)
-axs_vC[1].set_title(
-    "BuckConverterCell Prediction: Capacitor Voltage $v_C$",
-    fontsize=14,
-    fontweight="bold",
-)
-axs_vC[1].set_ylim(vC_ylim)
-axs_vC[1].grid(True, alpha=0.3)
-axs_vC[1].legend(fontsize=11)
+iL_buck: np.ndarray = np.asarray(iL_sim_test[:-1], dtype=float)[
+    seq_len : seq_len + min_len2
+]
+vC_buck: np.ndarray = np.asarray(vC_sim_test[:-1], dtype=float)[
+    seq_len : seq_len + min_len2
+]
 
-# GRU vC
-axs_vC[2].plot(
-    t_test_actual * 1e6,
-    vC_noise_cumulative,
-    label="GRU",
-    linewidth=2,
-    alpha=0.7,
-    color="green",
-)
-axs_vC[2].set_ylabel("Capacitor Voltage $v_C$ [V]", fontsize=12)
-axs_vC[2].set_xlabel("Time [μs]", fontsize=12)
-axs_vC[2].set_title(
-    "GRU Prediction: Capacitor Voltage $v_C$",
-    fontsize=14,
-    fontweight="bold",
-)
-# axs_vC[2].set_ylim(vC_ylim)
-axs_vC[2].grid(True, alpha=0.3)
-axs_vC[2].legend(fontsize=11)
+iL_gru: np.ndarray = pred_noise_np[:min_len2, 0]
+vC_gru: np.ndarray = pred_noise_np[:min_len2, 1]
 
-# BuckConverterCell + GRU vC
-axs_vC[3].plot(
-    t_test_actual * 1e6,
-    vC_combined,
-    label="BuckConverterCell + GRU",
-    linewidth=2,
-    alpha=0.7,
-    color="green",
+fig_iL, _, fig_vC, _ = plot_buck_gru_components_tail(
+    t=t_view,
+    iL_meas=iL_meas,
+    vC_meas=vC_meas,
+    iL_buck=iL_buck,
+    vC_buck=vC_buck,
+    iL_gru=iL_gru,
+    vC_gru=vC_gru,
+    T=T,
+    N_cycles=float(N_cycles),
+    title="note3 (test)",
+    include_overlay=True,
 )
-axs_vC[3].set_ylabel("Capacitor Voltage $v_C$ [V]", fontsize=12)
-axs_vC[3].set_xlabel("Time [μs]", fontsize=12)
-axs_vC[3].set_title(
-    "BuckConverterCell + GRU Prediction: Capacitor Voltage $v_C$",
-    fontsize=14,
-    fontweight="bold",
-)
-axs_vC[3].set_ylim(vC_ylim)
-axs_vC[3].grid(True, alpha=0.3)
-axs_vC[3].legend(fontsize=11)
-
-plt.tight_layout()
 plt.show()
 
 if keep_log:
     save_figure_to_log(
         fig_iL,
-        "buck_gru_combined_iL_separate",
+        "tail4T_iL_meas_buck_gru_sum",
         result_dir,
-        "インダクタ電流 $i_L$ の推論結果 (GRUの出力だけy軸をずらしている)",
+        "iL: Measured / Buck / GRU / Buck+GRU（末尾4周期）",
     )
     save_figure_to_log(
         fig_vC,
-        "buck_gru_combined_vC_separate",
+        "tail4T_vC_meas_buck_gru_sum",
         result_dir,
-        "コンデンサ電圧 $v_C$ の推論結果 (GRUの出力だけy軸をずらしている)",
+        "vC: Measured / Buck / GRU / Buck+GRU（末尾4周期）",
     )
