@@ -143,10 +143,10 @@ def plot_iLvC(
     for tail_window in show_tail:
         window = tail_window * T
         mask = t >= (t_end - window)
-        _plot_section(
+        fig, ax = _plot_section(
             t[mask], iL[mask], vC[mask], section_title=f"{title} (tail {tail_window}T)"
         )
-
+        figs.append((fig, ax))
     return figs
 
 
