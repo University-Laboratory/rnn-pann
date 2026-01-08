@@ -16,7 +16,7 @@ def load_data(
     skiprows: int = 20,  # ヘッダーの行数
     downsample_step: int = 125,
     T: float = 1e-6,  # 1周期の実時間[s]
-    cycles: int = 10,  # 末尾から何周期分切り出すか
+    cycles: int | None = 10,  # 末尾から何周期分切り出すか。Noneの場合は全体
     start_time_offset: float = 0.0000005,  # ズレ補正値[s]
     time_label: str = "TIME",
     iL_label: str = "CH1",
@@ -28,32 +28,47 @@ def load_data(
     iL_raw: np.ndarray = df[iL_label].to_numpy(dtype=np.float64)  # A
     vC_raw: np.ndarray = df[vC_label].to_numpy(dtype=np.float64)  # V
 
-    if cycles <= 0:
-        raise ValueError("cycles must be positive.")
+    if cycles is not None:
+        if cycles <= 0:
+            raise ValueError("cycles must be positive.")
     if T <= 0:
         raise ValueError("T must be positive.")
     if downsample_step <= 0:
         raise ValueError("downsample_step must be positive.")
 
-    # 末尾から「cycles*T 秒」分を切り出す
+    # データが空の場合は空配列を返す
     if t_raw.size == 0:
         empty = np.array([], dtype=np.float64)
         return empty, empty, empty
 
-    t_end = float(t_raw[-1])
-    start_time = t_end - float(cycles + 1) * float(T) + start_time_offset
-    end_time = start_time + float(cycles) * float(T)
-    mask = (t_raw >= start_time) & (t_raw <= end_time)
-
-    # window が長すぎる等で空になった場合は全体を返す
-    if not np.any(mask):
-        t_all = t_raw
-        iL_all = iL_raw
-        vC_all = vC_raw
+    if cycles is None:
+        # cyclesがNoneのとき、start_time_offset分だけ後ろから切り出す
+        mask = t_raw >= (t_raw[0] + start_time_offset)
+        if not np.any(mask):
+            # マスクが空の場合は全データ返す
+            t_all = t_raw
+            iL_all = iL_raw
+            vC_all = vC_raw
+        else:
+            t_all = t_raw[mask]
+            iL_all = iL_raw[mask]
+            vC_all = vC_raw[mask]
     else:
-        t_all = t_raw[mask]
-        iL_all = iL_raw[mask]
-        vC_all = vC_raw[mask]
+        # 末尾から「cycles*T 秒」分を切り出す
+        t_end = float(t_raw[-1])
+        start_time = t_end - float(cycles + 1) * float(T) + start_time_offset
+        end_time = start_time + float(cycles) * float(T)
+        mask = (t_raw >= start_time) & (t_raw <= end_time)
+
+        # windowが長すぎる等で空になった場合は全体を返す
+        if not np.any(mask):
+            t_all = t_raw
+            iL_all = iL_raw
+            vC_all = vC_raw
+        else:
+            t_all = t_raw[mask]
+            iL_all = iL_raw[mask]
+            vC_all = vC_raw[mask]
 
     # 先頭を0秒にそろえる
     if t_all.size:

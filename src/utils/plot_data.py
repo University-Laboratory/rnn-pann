@@ -1,3 +1,4 @@
+from collections.abc import Mapping, Sequence
 from typing import Any, Literal
 
 import matplotlib.pyplot as plt
@@ -392,6 +393,74 @@ def plot_param_learning_progress(
     axs[2].set_title("Resistance R: Learning Progress", fontweight="bold")
     axs[2].grid(True, alpha=0.3)
     axs[2].legend(fontsize=11)
+
+    fig.tight_layout()
+    return fig, axs
+
+
+def plot_param_learning_progress_all(
+    param_history: Mapping[str, Sequence[float]],
+    true_params: Mapping[str, float] | None = None,
+    *,
+    figsize: tuple[int, int] = (12, 10),
+    ncols: int = 1,
+    units: Mapping[str, str] | None = None,
+) -> tuple[plt.Figure, np.ndarray]:
+    """
+    param_history に含まれる全パラメータの学習過程を自動でプロットする。
+
+    - param_history: {"L": [...], "C": [...], ...} のような辞書
+    - true_params: {"L": 1e-3, "C": 1e-6, ...} のような真値（無いキーは破線を描かない）
+    """
+    if len(param_history) == 0:
+        raise ValueError("param_history must be non-empty.")
+    if ncols <= 0:
+        raise ValueError("ncols must be positive.")
+
+    default_units: dict[str, str] = {"L": "H", "C": "F", "R": "Ω"}
+    unit_map: dict[str, str] = {**default_units, **(dict(units) if units else {})}
+
+    keys: list[str] = list(param_history.keys())
+    n_params = len(keys)
+    nrows = int(np.ceil(n_params / ncols))
+
+    fig, axs = plt.subplots(nrows, ncols, figsize=figsize, squeeze=False)
+    axs_flat: list[plt.Axes] = list(axs.ravel())
+
+    for i, k in enumerate(keys):
+        ax = axs_flat[i]
+        y = np.asarray(param_history[k], dtype=float)
+        if y.size == 0:
+            raise ValueError(f"param_history['{k}'] is empty.")
+
+        x = np.arange(1, y.size + 1, dtype=int)
+        ax.plot(x, y, label="Estimated", linewidth=2, color="tab:blue")
+
+        if true_params is not None and k in true_params:
+            true_v = float(true_params[k])
+            ax.axhline(
+                y=true_v,
+                color="red",
+                linestyle="--",
+                linewidth=2,
+                label=f"True value ({true_v:.6e})",
+            )
+
+        unit = unit_map.get(k)
+        ax.set_ylabel(f"{k} [{unit}]" if unit else k)
+        ax.set_title(f"{k}: Learning Progress", fontweight="bold")
+        ax.grid(True, alpha=0.3)
+        ax.legend(fontsize=11)
+        ax.xaxis.set_major_locator(MaxNLocator(integer=True))
+
+    # 余ったAxesは非表示
+    for j in range(n_params, len(axs_flat)):
+        axs_flat[j].set_visible(False)
+
+    # 1段目以外でも見やすいように最下段だけxlabel（複数列なら全下段に付ける）
+    for j in range(max(0, nrows - 1) * ncols, min(nrows * ncols, len(axs_flat))):
+        if axs_flat[j].get_visible():
+            axs_flat[j].set_xlabel("Epoch")
 
     fig.tight_layout()
     return fig, axs

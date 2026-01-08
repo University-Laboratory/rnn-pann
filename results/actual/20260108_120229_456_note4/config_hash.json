@@ -1,0 +1,16 @@
+{
+  "hash": "86c00f765e5597644a746661a6fb97e33b13ef1b94009be808426a6aef0d11af",
+  "config": {
+    "data_path": "../../data/csv/tek0002ALL.csv",
+    "L_true": 0.0002236,
+    "C_true": 7.38e-05,
+    "R_true": 5,
+    "Vin": 10,
+    "f_sw": 100000.0,
+    "T": 1e-05,
+    "cycles": 10,
+    "cycles_sim": 1000,
+    "samples_per_cycle": 200,
+    "clipped_k": 2.0
+  }
+}
