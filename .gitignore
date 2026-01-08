@@ -15,6 +15,4 @@ tmp/
 data/_tmp_sanity/
 data/ltspice_sim/*
 !data/ltspice_sim/Buck.asc
-!data/ltspice_sim/Buck.raw
-!data/ltspice_sim/ltspice_sim_data.csv
 !data/ltspice_sim/preview_sim_data_from_raw.ipynb
