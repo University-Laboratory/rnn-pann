@@ -233,13 +233,24 @@ def plot_compare_tail(
         ax_.axhline(y=y_hi, label=f"{base_label} hi", **default_clip_line_kwargs)
 
     # N周期分のマスクを取得
+    # - t1/t2 で別々の終端基準にすると横軸がズレるので、共通窓で揃える
     t_end1 = float(t1[-1])
     t_end2 = float(t2[-1])
-    mask1 = t1 >= (t_end1 - N_cycles * T)
-    mask2 = t2 >= (t_end2 - N_cycles * T)
-    # ウィンドウ内でt1, t2を0始まりに調整
-    t1_view = t1[mask1] - t1[mask1][0]
-    t2_view = t2[mask2] - t2[mask2][0]
+    t_end = min(t_end1, t_end2)
+    t_start = t_end - float(N_cycles) * float(T)
+
+    mask1 = (t1 >= t_start) & (t1 <= t_end)
+    mask2 = (t2 >= t_start) & (t2 <= t_end)
+
+    if not np.any(mask1) or not np.any(mask2):
+        raise ValueError(
+            "Not enough samples in the last N_cycles window for t1/t2. "
+            "Try decreasing N_cycles or check time ranges."
+        )
+
+    # 共通の開始時刻(t_start)を0に揃える
+    t1_view = t1[mask1] - t_start
+    t2_view = t2[mask2] - t_start
     iL1_view = np.array(iL1)[mask1]
     vC1_view = np.array(vC1)[mask1]
     iL2_view = np.array(iL2)[mask2]

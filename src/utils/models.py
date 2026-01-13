@@ -35,6 +35,34 @@ class BuckConverterCell(nn.Module):
         return torch.stack([iL_next, vC_next], dim=1)
 
 
+class BuckConverterCellILOnly(nn.Module):
+    def __init__(self, L_init: float) -> None:
+        super().__init__()
+        # パラメータを対数空間で学習（正の値を保証）
+        self.log_L = nn.Parameter(torch.log(torch.tensor(L_init)))
+
+    def forward(self, h: torch.Tensor, x: torch.Tensor) -> torch.Tensor:
+        """
+        h: [iL, vC]
+        x: [vs, u, dt]
+        """
+
+        iL = h[:, 0]
+        vC = h[:, 1]
+        vs = x[:, 0]
+        u = x[:, 1]
+        dt = x[:, 2]
+        vp = vs * u
+
+        # パラメータを指数関数で変換（正の値を保証）
+        L = torch.exp(self.log_L)
+
+        # オイラー法
+        iL_next = iL + (dt / L) * (vp - vC)
+
+        return torch.stack([iL_next], dim=1)
+
+
 # GRUモデルの定義（ノイズ予測用）
 class GRUModel(nn.Module):
     def __init__(
