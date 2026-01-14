@@ -186,6 +186,11 @@ def plot_u_vs_iL_vC(
     axs[3].grid(True, alpha=0.3)
     axs[3].set_title(f"{title}: Capacitor voltage vC", fontsize=14, fontweight="bold")
 
+    # vC軸を普通のfloat表記に統一
+    from matplotlib.ticker import FormatStrFormatter
+    axs[3].yaxis.set_major_formatter(FormatStrFormatter('%.4f'))
+
+
     fig.tight_layout()
     return fig, axs
 
