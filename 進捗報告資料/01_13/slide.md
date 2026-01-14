@@ -69,7 +69,7 @@
 ### 前処理
 
 - **ダウンサンプリング**: 生波形を「1 周期あたり 200 点」になるように間引き（例: `downsample_step = len(t_raw)//(_T*200)`）
-- **平滑化（FIR ローパス）**: `firwin` で FIR を設計し、`filtfilt` でゼロ位相フィルタリング（例: `fc = 0.2 * f_sw`、iL: taps=10, vC: taps=1000）
+- **平滑化（FIR ローパス）**: `firwin` で FIR を設計し、`filtfilt` でゼロ位相フィルタリング（例: `fc = 0.2 * f_sw`、iL: taps=3, vC: taps=1000）
 
 ### 学習データ
 
