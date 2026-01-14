@@ -66,6 +66,11 @@
     - $C$: 1e-2
     - $R$: 2e-2
 
+### 前処理
+
+- **ダウンサンプリング**: 生波形を「1 周期あたり 200 点」になるように間引き（例: `downsample_step = len(t_raw)//(_T*200)`）
+- **平滑化（FIR ローパス）**: `firwin` で FIR を設計し、`filtfilt` でゼロ位相フィルタリング（例: `fc = 0.2 * f_sw`、iL: taps=10, vC: taps=1000）
+
 ### 学習データ
 
 ![](../../進捗報告資料/01_13/images/sim元データ全波形.png)
@@ -75,9 +80,9 @@
 
 |              | インダクタ $L$ | キャパシタ $C$ | 抵抗 $R$ |
 | :----------: | :------------: | :------------: | :------: |
-|  **真の値**  | 2.236e-04 [H]  | 7.3800e-05 [F] | 5.00 [Ω] |
-|  **初期値**  | 2.000e-04 [H]  | 1.000e-04 [F]  | 8.00 [Ω] |
-|  **推論値**  | 2.322e-04 [H]  | 7.410e-05 [F]  | 5.00 [Ω] |
+|  **真の値**  |   223.6 [μH]   |   73.8 [μF]    | 5.00 [Ω] |
+|  **初期値**  |   200.0 [μH]   |   100.0 [μF]   | 8.00 [Ω] |
+|  **推論値**  |   232.2 [μH]   |   74.1 [μF]    | 5.00 [Ω] |
 | **推定誤差** |    3.83 [%]    |    0.46 [%]    | 0.01 [%] |
 
 ![](../../進捗報告資料/01_13/images/simBuckLossの遷移.png)
@@ -98,15 +103,12 @@
 
 ![](../../進捗報告資料/01_13/images/simGRU学習データ.png)
 
-- iL, vC, dt は物理基準で無次元化し、iL_nd, vC_nd, dt_nd として扱っている
-
-  - iL_nd = iL / (Vin / R_pred)
-  - vC_nd = vC / Vin
-  - dt_nd = dt / T
-
-- iL_noise, vC_noise は、訓練データで平均と標準偏差を求めて z-score 標準化（iL_noise_z, vC_noise_z）している
-
-（詳細は [note5/note.ipynb](../../actual_machine_notebooks/note5/note.ipynb) の Scalers クラス・fit_scalers_physics 関数を参照）
+- **無次元化（物理基準）**:
+  - iL は `i_base = Vin / R_load` で規格化（例: `iL_nd = iL / (Vin / R_load)`）
+  - vC と vs は `v_base = Vin` で規格化（`vC_nd = vC / Vin`, `vs_nd = vs / Vin`）
+  - dt は `t_base = T` で規格化（`dt_nd = dt / T`）
+  - u は 0/1 なのでそのまま
+- **ノイズのみ z-score**: `noise_train` の平均・標準偏差で標準化し、推論後に逆変換して Buck 出力に加算（詳細は [note5/note.ipynb](../../actual_machine_notebooks/note5/note.ipynb) の `Scalers`・`fit_scalers_physics` 参照）
 
 ### 結果
 
@@ -116,8 +118,6 @@
 
 ![](../../進捗報告資料/01_13/images/simBCC+GRU推論結果iL.png)
 ![](../../進捗報告資料/01_13/images/simBCC+GRU推論結果vC.png)
-
-
 
 # 実機データ
 
@@ -133,6 +133,7 @@
     - $L$: 5e-2
     - $C$: 1e-2
     - $R$: 2e-2
+- **前処理**: シミュレーションと同様（ダウンサンプリング、FIR ローパス平滑化、区間切り出し、1-step 学習用の整列）
 
 ### 学習データ
 
@@ -143,10 +144,10 @@
 
 |              | インダクタ $L$ | キャパシタ $C$ | 抵抗 $R$ |
 | :----------: | :------------: | :------------: | :------: |
-|  **真の値**  | 2.236e-04 [H]  | 7.3800e-05 [F] | 5.00 [Ω] |
-|  **初期値**  | 2.000e-04 [H]  | 1.000e-04 [F]  | 8.00 [Ω] |
-|  **推論値**  | 2.507e-04 [H]  | 6.760e-05 [F]  | 4.81 [Ω] |
-| **推定誤差** |   12.11 [%]    |    8.45 [%]    | 3.72 [%] |
+|  **真の値**  |   223.6 [µH]   |   73.8 [µF]    | 5.00 [Ω] |
+|  **初期値**  |   200.0 [µH]   |   100.0 [µF]   | 8.00 [Ω] |
+|  **推論値**  |   247.9 [µH]   |   67.6 [µF]    | 4.81 [Ω] |
+| **推定誤差** |   10.87 [%]    |    8.42 [%]    | 3.72 [%] |
 
 ![](../../進捗報告資料/01_13/images/actualBuckLossの遷移.png)
 
@@ -166,15 +167,7 @@
 
 ![](../../進捗報告資料/01_13/images/actualGRU学習データ.png)
 
-- iL, vC, dt は物理基準で無次元化し、iL_nd, vC_nd, dt_nd として扱っている
-
-  - iL_nd = iL / (Vin / R_pred)
-  - vC_nd = vC / Vin
-  - dt_nd = dt / T
-
-- iL_noise, vC_noise は、訓練データで平均と標準偏差を求めて z-score 標準化（iL_noise_z, vC_noise_z）している
-
-（詳細は [note5/note.ipynb](../../actual_machine_notebooks/note5/note.ipynb) の Scalers クラス・fit_scalers_physics 関数を参照）
+- **前処理**: シミュレーションと同様（ノイズ=Buck 予測と実測の残差、物理基準の無次元化、ノイズのみ z-score。詳細は [note5/note.ipynb](../../actual_machine_notebooks/note5/note.ipynb) の `Scalers`・`fit_scalers_physics` 参照）
 
 ### 結果
 
