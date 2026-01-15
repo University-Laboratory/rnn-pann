@@ -157,9 +157,41 @@ def plot_u_vs_iL_vC(
     vs: np.ndarray,
     iL: np.ndarray,
     vC: np.ndarray,
+    T: float | None = None,
+    *,
     title: str = "Training Data",
-) -> tuple[plt.Figure, plt.Axes]:
+    highlight_t: tuple[float, float] | None = None,
+    highlight_cycles: tuple[float, float] | None = None,
+    highlight_color: str = "tab:gray",
+    highlight_alpha: float = 0.15,
+) -> tuple[plt.Figure, np.ndarray]:
     fig, axs = plt.subplots(4, 1, figsize=(14, 10), sharex=True)
+
+    if highlight_t is not None and highlight_cycles is not None:
+        raise ValueError("Specify either highlight_t or highlight_cycles, not both.")
+
+    highlight_range_us: tuple[float, float] | None = None
+    if highlight_cycles is not None:
+        if T is None:
+            raise ValueError("T is required when highlight_cycles is specified.")
+        c0, c1 = highlight_cycles
+        t0 = float(c0) * float(T)
+        t1 = float(c1) * float(T)
+        highlight_range_us = (t0 * 1e6, t1 * 1e6)
+    elif highlight_t is not None:
+        t0, t1 = highlight_t
+        highlight_range_us = (float(t0) * 1e6, float(t1) * 1e6)
+
+    if highlight_range_us is not None:
+        x0, x1 = highlight_range_us
+        if x1 < x0:
+            x0, x1 = x1, x0
+
+        for ax in axs:
+            # 切り出し範囲を縦帯で可視化
+            ax.axvspan(x0, x1, color=highlight_color, alpha=highlight_alpha, zorder=0)
+            ax.axvline(x=x0, color=highlight_color, alpha=0.6, linewidth=1.0)
+            ax.axvline(x=x1, color=highlight_color, alpha=0.6, linewidth=1.0)
 
     # --- u (スイッチング信号) ---
     axs[0].step(t[1:] * 1e6, u, where="post", color="blue", linewidth=1.5)
@@ -188,8 +220,8 @@ def plot_u_vs_iL_vC(
 
     # vC軸を普通のfloat表記に統一
     from matplotlib.ticker import FormatStrFormatter
-    axs[3].yaxis.set_major_formatter(FormatStrFormatter('%.4f'))
 
+    axs[3].yaxis.set_major_formatter(FormatStrFormatter("%.4f"))
 
     fig.tight_layout()
     return fig, axs
