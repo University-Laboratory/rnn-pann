@@ -45,8 +45,6 @@ flowchart TB
     u_raw --> u_downsampled
     vs_raw --> vs_downsampled
 
-    %% ここまで共通処理 %%
-
     subgraph BuckConverterCellの処理
         subgraph フィルタリング
             iL_filt[iL_filt]
@@ -87,15 +85,15 @@ flowchart TB
         BuckConverterCell --> BuckConverterCell_params
     end
 
+    subgraph ダウンサンプリングコピー
+        dt_downsampled_copy[dt_ds]
+        u_downsampled_copy[u_ds]
+        vs_downsampled_copy[vs_ds]
+        iL_downsampled_copy[iL_ds]
+        vC_downsampled_copy[vC_ds]
+    end
+    dt_downsampled --> dt_downsampled_copy
     subgraph GRUの処理
-        subgraph ダウンサンプリングコピー
-            dt_downsampled_copy[dt_ds]
-            u_downsampled_copy[u_ds]
-            vs_downsampled_copy[vs_ds]
-            iL_downsampled_copy[iL_ds]
-            vC_downsampled_copy[vC_ds]
-        end
-        dt_downsampled --> dt_downsampled_copy
 
         subgraph ノイズ抽出
             noise_data[iL_noise, vC_noise]
