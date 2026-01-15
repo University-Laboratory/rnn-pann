@@ -65,7 +65,7 @@ $$v_C[k+1] = v_C[k] + \frac{\Delta t_k}{C} \left( i_L[k] - \frac{v_C[k]}{R_{\mat
 ### 前処理
 
 - **ダウンサンプリング**: 生波形を「1 周期あたり 200 点」になるように間引き（例: `downsample_step = len(t_raw)//(_T*200)`）
-- **平滑化（FIR ローパス）**: `firwin` で FIR を設計し、`filtfilt` でゼロ位相フィルタリング（例: `fc = 0.2 * f_sw`、iL: taps=3, vC: taps=1000）
+- **平滑化（FIR ローパス）**: [`firwin`](https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.firwin.html) で FIR を設計し、[`filtfilt`](https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.filtfilt.html) でゼロ位相フィルタリング（`fc = 0.2 * f_sw`、iL: taps=3, vC: taps=1000）
 
 ### 学習データ
 
