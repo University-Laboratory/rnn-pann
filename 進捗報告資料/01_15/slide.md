@@ -39,7 +39,7 @@ flowchart TB
         vs_downsampled[vs_ds]
     end
 
-    t_raw --> dt_downsampled
+    dt_raw --> dt_downsampled
     iL_raw --> iL_downsampled
     vC_raw --> vC_downsampled
     u_raw --> u_downsampled
@@ -56,11 +56,13 @@ flowchart TB
         vC_downsampled --> vC_filt
 
         subgraph n周期切り出し
+            dt_buck[dt_buck]
             iL_buck[iL_buck]
             vC_buck[vC_buck]
             u_buck[u_buck]
             vs_buck[vs_buck]
         end
+        dt_downsampled --> dt_buck
         iL_filt --> iL_buck
         vC_filt --> vC_buck
         u_downsampled --> u_buck
@@ -71,50 +73,62 @@ flowchart TB
         vC_buck --> BuckConverterCell
         u_buck --> BuckConverterCell
         vs_buck --> BuckConverterCell
+        dt_buck --> BuckConverterCell
 
         subgraph 推論値
-            iL_pred[iL_pred]
-            vC_pred[vC_pred]
+            BuckConverterCell_out[iL_pred, vC_pred]
         end
 
-        BuckConverterCell --> iL_pred
-        BuckConverterCell --> vC_pred
+        BuckConverterCell --> BuckConverterCell_out
 
         subgraph パラメータの推論
-            L_pred[L_pred]
-            C_pred[C_pred]
-            R_pred[R_pred]
+            BuckConverterCell_params[L_pred, C_pred, R_pred]
         end
-        BuckConverterCell --> L_pred
-        BuckConverterCell --> C_pred
-        BuckConverterCell --> R_pred
+        BuckConverterCell --> BuckConverterCell_params
     end
 
     subgraph GRUの処理
+        subgraph ダウンサンプリングコピー
+            dt_downsampled_copy[dt_ds]
+            u_downsampled_copy[u_ds]
+            vs_downsampled_copy[vs_ds]
+            iL_downsampled_copy[iL_ds]
+            vC_downsampled_copy[vC_ds]
+        end
+        dt_downsampled --> dt_downsampled_copy
+
+        subgraph ノイズ抽出
+            noise_data[iL_noise, vC_noise]
+        end
+        BuckConverterCell_out --> noise_data
+        iL_downsampled_copy --> noise_data
+        vC_downsampled_copy --> noise_data
+
         subgraph 無次元化
             iL_nd[iL_nd]
             vC_nd[vC_nd]
-            dt_nd[dt_nd]
-            u_nd[u_nd]
             vs_nd[vs_nd]
+            dt_nd[dt_nd]
         end
-        iL_downsampled --> iL_nd
-        vC_downsampled --> vC_nd
-        u_downsampled --> u_nd
-        vs_downsampled --> vs_nd
+        iL_downsampled_copy --> iL_nd
+        vC_downsampled_copy --> vC_nd
+        vs_downsampled_copy --> vs_nd
+        dt_downsampled_copy --> dt_nd
 
-        subgraph ノイズ抽出
-            iL_noise[iL_noise]
-            vC_noise[vC_noise]
-        end
-        iL_downsampled --> iL_noise
-        vC_downsampled --> vC_noise
+        GRU[GRU学習]
+        iL_nd --> GRU
+        vC_nd --> GRU
+        vs_nd --> GRU
+        dt_nd --> GRU
+        noise_data --> GRU
+
+        GRU_out[GRUのノイズ予測]
+        GRU --> GRU_out
     end
 
 
-
-
-
-
+    FinalOutPut[BuckConverterCell + GRU の結果]
+    GRU_out --> FinalOutPut
+    BuckConverterCell_out --> FinalOutPut
 
 ```
